@@ -24,7 +24,9 @@ lib/
     ads_service.dart     AdMob init, banner factory, interstitial throttle
   screens/               home, category/brand, group detail, search, saved, settings, policy
   widgets/               highlight_text.dart, banner_ad_slot.dart
-assets/data/catalog.json bundled seed data
+assets/data/catalog.json bundled offline catalog (generated)
+tools/raw/*.txt          source lists scraped from combouniversal.com
+tools/build_catalog.py   regenerates assets/data/catalog.json from tools/raw/
 store/                   Play listing, data safety, privacy policy, terms, icon source
 ```
 
@@ -67,3 +69,27 @@ Host a JSON file with the same schema as `assets/data/catalog.json` at `CATALOG_
 ```bash
 flutter test
 ```
+
+
+## Updating the bundled data
+
+The offline catalog ships with **1,174 universal lists covering 5,675 phone
+models** across 5 categories (Combo/Display, Battery, Tempered Glass, CC/Sub
+Board, Mobile Cover).
+
+Edit the plain-text sources in `tools/raw/` and regenerate:
+
+```bash
+python3 tools/build_catalog.py
+```
+
+Formats:
+
+- `combo_*.txt`, `glass_*.txt`, `cc_*.txt`, `case_all.txt` — one group per line,
+  models comma separated. Trailing descriptors such as `Punch Hole LCD` are
+  detected automatically and stored as the group note.
+- `battery_*.txt` — `Battery code|Model, Model, Model` per line.
+- Lines starting with `Coming Soon` are skipped.
+
+To push an update without a Play release, host the generated JSON at
+`CATALOG_URL` and bump its `version`.

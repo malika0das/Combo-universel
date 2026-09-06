@@ -1,0 +1,110 @@
+BLP-A05 Battery Universal|Oppo A2 Pro 5G, Oppo Reno 10 5G
+BLP-A07 Battery Universal 5000mAh|Oppo A78 4G, Oppo Reno 8T (CPH2565)
+BLP-A15 Battery Universal 5000mAh|Realme 11 Pro 5G
+BLP-A17 Battery Universal 5000mAh|Realme 12X 5G (RMX3998), Realme C65 4G, Realme Narzo N53
+BLP-A19 Battery Universal 5000mAh|Oppo A2 5G, Oppo A38, Oppo A58 4G, Oppo A79 5G, Oppo A59 5G, OnePlus Nord N30 SE 5G
+BLP-A21 Battery Universal 5000mAh|Oppo A18 4G
+BLP-A41 Battery Universal 5000mAh|Oppo F25 Pro 5G
+BLP577 Battery Universal 2420mAh|Oppo R3, Oppo A51, Oppo A51K, Oppo A51T
+BLP601 Battery Universal 2980mAh|Oppo F1s, Oppo A59, Oppo A53
+BLP605 Battery Universal 2500mAh|Oppo A33, Oppo A33T, Oppo F1, Oppo A35, Oppo Neo 7 2015
+BLP607 Battery Universal 2500mAh|Oppo A30, OnePlus X
+BLP609 Battery Universal 2850mAh|Oppo F1 Plus, Oppo R9, Oppo R9 Plus
+BLP611 Battery Universal 4120mAh|Oppo R9 Plus
+BLP615 Battery Universal 2630mAh|Oppo A37, Oppo A37M
+BLP619/BLP627 Battery Universal 2900mAh|Oppo A39, Oppo A57, Oppo A57T, Oppo R9SK, Oppo F3 Lite
+BLP621 Battery Universal 3010mAh|Oppo R9s
+BLP623 Battery Universal 4120mAh|Oppo F3 Plus, Oppo R9s Plus
+BLP631 Battery Universal 3150mAh|Oppo F5, Oppo F3, Oppo F5 Youth, Oppo F7, Oppo A77
+BLP639 Battery Universal 4000mAh|Oppo R11, Oppo R11s Plus
+BLP641 Battery Universal 3000mAh|Oppo A71, Oppo A83
+BLP645 Battery Universal 4000mAh|Oppo R11s, Oppo R11s Plus
+BLP649 Battery Universal 3180mAh|Oppo A88M, Oppo A83, Oppo A83T
+BLP661 Battery Universal 3400mAh|Oppo F7, Oppo A3
+BLP665 Battery Universal 3000mAh|Realme 1
+BLP673/BLP817 Battery Universal 4230mAh|Oppo A5s, Oppo A3s, Oppo A5, Oppo A7, Oppo A7N, Oppo A8, Oppo A1K, Oppo A11K, Oppo A16K, Oppo A16e, Oppo A12, Oppo A12e, Oppo A12s, Oppo A15, Oppo A15s, Oppo A31, Oppo A35, Realme C1 2018, Realme C1 2019, Realme 2, Realme 3, Realme 3i
+BLP681/BLP683 Battery Universal 3700mAh|Oppo R17, Oppo F9, Oppo F9 Pro, Realme 2 Pro, Realme U1
+BLP689 Battery Universal 3700mAh|Oppo K1, Oppo R15X, Oppo RX17 Neo, Oppo Reno A
+BLP693 Battery Universal 3700mAh|Realme 3, Realme 3i
+BLP695 Battery Universal 3500mAh|Realme U1, Realme 2 Pro
+BLP697 Battery Universal 3700mAh|Oppo F11 Pro
+BLP705 Battery Universal 4065mAh|Oppo Reno 10X Zoom (CPH1919)
+BLP707 Battery Universal 4020mAh|Oppo F11
+BLP709 Battery Universal 4000mAh|Oppo A9 2019, Oppo A9s
+BLP711/BLP721 Battery Universal 4000mAh|Realme C2, Oppo A1K
+BLP713 Battery Universal 4500mAh|Realme 3 Pro, Realme X Lite
+BLP717 Battery Universal 4000mAh|Oppo Reno Z
+BLP727/BLP729 Battery Universal 5000mAh|Realme C11 2020, Realme C11 2021, Realme 5, Realme 5i, Realme 5s, Realme 6i, Realme C3, Realme C20, Realme C20A, Realme C21, Realme C21Y, Realme C25, Realme Narzo 10A, Realme Narzo 20A, Realme V3, Realme Q2i, Realme C3i, Realme Narzo 50i, Oppo A5 2020, Oppo A9 2020 (CPH1937), Oppo A11, Oppo A11X
+BLP731 Battery Universal 4000mAh|Realme 5 Pro
+BLP735/BLP737 Battery Universal 4000mAh|Oppo Reno 2, Oppo Reno 2F, Oppo Reno 2z
+BLP741 Battery Universal 4000mAh|Realme XT (RMX1921), Realme X2
+BLP749 Battery Universal 4000mAh|Realme X2 Pro (RMX1931)
+BLP755 Battery Universal 4025mAh|Oppo Reno 3, Oppo Reno 3 5G, Oppo Reno 3 Youth, Oppo Reno 3 Pro, Oppo Reno 3 Pro 5G, Oppo K7 5G, Oppo K7X 5G, Oppo Find X2 Lite 5G, Oppo Find X2 Neo 5G
+BLP757 Battery Universal 4000mAh|Realme 6, Realme 6i, Realme 6s, Realme 6 Pro, Realme X3, Realme X3 Super Zoom
+BLP765 Battery Universal 4000mAh|Oppo F15, Oppo A91, Oppo Reno 3, Oppo Reno 4 5G, Oppo A92s 5G, Oppo Reno 4F, Oppo A93, Oppo F17
+BLP771 Battery Universal 5000mAh|Realme C25Y (RMX3269), Realme Narzo 10, Realme 6i, Realme 8i, Realme C17, Realme Narzo 30 5G, Realme Narzo 50A Prime
+BLP775 Battery Universal 4000mAh|Realme X3, Realme X3 Super Zoom, Realme X50, Realme X50M
+BLP779 Battery Universal 4000mAh|Oppo Reno 4, Oppo Reno 4 Lite, Oppo A92s, Oppo F17 Pro, Oppo A73, Oppo F17, Oppo A93, Oppo Reno 4F, Oppo Reno 4Z 5G, Oppo Reno 5A
+BLP781 Battery Universal 4880mAh|Oppo A52, Oppo A72, Oppo A92
+BLP787 Dual Cell Battery Universal 4000mAh|Oppo Reno 4 5G, Oppo Reno 4 Pro, Oppo Reno 4 Pro 5G
+BLP791 Battery Universal 4015mAh|Oppo F17 Pro, Oppo Reno 4 Lite
+BLP793 Battery Universal|Realme C11, Realme C13, Realme Narzo 30A, Realme Narzo 50A
+BLP797 Battery Universal 4000mAh|Oppo A53 5G, Oppo A72 5G, Oppo A73 5G
+BLP799 Dual Cell Battery Universal 4500mAh|Realme 7 Pro, Realme X7 Pro, Realme X7 5G, Realme X7 Pro 5G, Realme V15 5G, Oppo Find X3, Oppo Find X3 Pro, Realme X3 Pro, Realme Q2 Pro 5G, Realme Narzo 20 Pro
+BLP801 Dual Cell Battery Universal 4500mAh|OnePlus 8T, OnePlus 9R 5G
+BLP803/BLP805 Battery Universal 5000mAh|Realme 7i, Realme C17, Realme Q3 5G, Realme Q3i 5G, Realme V3, Realme V3 5G, Realme 8 5G, Realme 8s 5G, Realme Narzo 30 5G, Realme V13 5G, Oppo A53, Oppo A73, Oppo A16, Oppo A16s, Oppo A32, Oppo A33, Oppo A52, Oppo A54
+BLPA805 Battery Universal 5000mAh|Oppo A16, Realme C63, Realme C63 5G, Realme 10 Pro
+BLPB21 Battery Universal 5000mAh|Realme C61 (RMX3933), Realme Narzo N61, Realme Note 60, Realme Note 60X, Oppo A18 4G, Oppo F11, Oppo F11 Pro
+BLP813 Battery Universal 4500mAh|Oppo F25 Pro 5G, Oppo Reno 11F 5G, OnePlus Nord N100, OnePlus Nord N200 5G
+BLP823 Battery Universal 4350mAh|Oppo Reno 5 5G, Oppo Reno 5K 5G, Oppo Reno 5 Pro, Oppo Reno 5 Pro 5G, Oppo Find X3 Lite 5G
+BLP929 Dual Cell Battery Universal 4500mAh|Oppo Reno 8 Pro 5G, Oppo Reno 8 Pro Plus 5G, Oppo Reno 9 5G, Oppo Reno 9 Pro 5G, Oppo Reno 9 Pro Plus 5G
+BLPA77 Battery Universal 5100mAh|Oppo A3X 4G, Oppo A3X 5G (CPH2641), Oppo A3 5G (CPH2683), Oppo A3 Pro 5G (CPH2639), Oppo A40M, Oppo A40, Oppo A60 5G, Oppo A80
+BLPA43 Battery Universal 5000mAh|Realme 12 4G, Realme 12 Plus 5G, Realme Narzo 70 Pro
+BLP701/BLP715/BLP723 Battery Universal 3700mAh|Oppo K3, Realme X, Oppo Reno, Oppo A5s
+BLP877 Battery Universal 5000mAh|Realme C30, Realme C30S (RMX3690), Realme C31, Realme C33 2023, Realme C33 2022, Realme C35, Realme 8i, Realme 8i 5G, Realme 9i 5G, Realme V20 5G, Realme V30, Realme Narzo 50, Realme Narzo 50A Prime, Realme C53 (RMX3762)
+BLP851 Battery Universal 5000mAh|Oppo A54 5G, Oppo A74, Oppo A74 5G, Oppo A95 4G, Oppo F19, Oppo F19s, Oppo A93 5G, Oppo K7X 5G, Oppo A93s 5G, Oppo Reno 6 Lite
+BLP685 Battery Universal 3700mAh|OnePlus 6T, OnePlus 7
+BLPA785 Battery Universal 4115mAh|OnePlus Nord
+BLP907 Battery Universal 4500mAh|Oppo Reno 7, Oppo Reno 7 5G, Oppo Reno 7 Lite 5G, Oppo Reno 7z 5G, Oppo Reno 7 SE 5G, Oppo Reno 8 4G, Oppo Reno 8z 5G, Oppo Reno 8 Lite 5G, OnePlus Nord N20 5G, Oppo Find X5 Lite 5G, Oppo F21 Pro 5G
+BLP923 Battery Universal 4500mAh|Realme 11, Realme C67 5G, Realme 11X 5G, Realme C51, Realme C53, Realme Note 50, Oppo A51, Oppo A57, Oppo A57s, Oppo A77, Oppo A77 5G, Oppo A56s, Oppo A78 5G, Oppo A97, Oppo K10 5G, Oppo A77s, OnePlus N20, OnePlus N20 SE (CPH2469), OnePlus Nord N300
+BLP839 Battery Universal 4310mAh|Oppo Reno 6Z, Oppo Reno 5Z 5G, Oppo A94 5G (CPH2211), Realme 8 4G
+BLP875 Battery Universal 5000mAh|Realme C55, Realme C75, Realme Q3T 5G, Realme Narzo N55, Realme Q3s 5G, Realme 9 5G Speed, Realme Narzo 50 5G
+BLP819 Battery Universal 4310mAh|Oppo F19 Pro, Oppo F19 Pro Plus 5G, Oppo Reno 5 4G, Oppo Reno 6, Oppo Reno 5Z, Oppo A94, Oppo Reno 5F, Oppo A94 5G, Oppo A95 5G, Oppo Reno 5 5G, Oppo Reno 5K 5G, Oppo Find X3 Lite 5G
+BLP911 Battery Universal 5000mAh|Realme 9i, Oppo K11 5G, OnePlus Nord CE2 Lite 5G, Vivo V25 5G
+BLP915 Battery Universal 5000mAh|Oppo A17, Oppo A17K
+BLP637 Battery Universal 3300mAh|OnePlus 5, OnePlus 5T
+BLP743 Battery Universal 3700mAh|OnePlus 7T
+BLP899 Dual Cell Battery Universal 5000mAh|OnePlus 10 Pro 5G
+BLP745 Battery Universal 4085mAh|OnePlus 7T Pro (HD1910)
+BLP633 Battery Universal 3400mAh|OnePlus 3T
+BLP975 Battery Universal 5000mAh|OnePlus 11, OnePlus 11R
+BLP829 Battery Universal 4500mAh|OnePlus 9 5G (LE2110)
+BLP933 Battery Universal 5000mAh|Realme 11 5G, Oppo K10 5G (PGJM10), OnePlus Ace
+BLP879 Battery Universal 5000mAh|Oppo A36, Oppo A96 (CPH2333)
+BLP989 Battery Universal 5000mAh|Oppo K11X 5G, Oppo A98 5G, Oppo A1 5G, Oppo F23 5G, OnePlus Nord CE3 Lite 5G, OnePlus Nord N30 5G
+BLP981 Battery Universal 4800mAh|Oppo A1 Pro 5G, Oppo Reno 8T 5G
+BLP983 Battery Universal 5000mAh|Realme 10 Pro, Realme 10 Pro 5G
+BLP815 Battery Universal 4300mAh|OnePlus Nord N10 5G
+BLP957 Battery Universal 5000mAh|Realme 10 4G
+BLP833 Battery Universal 4310mAh|Oppo Reno 5 4G, Realme V15 5G, Realme X7 5G
+BLP831 Dual Cell Battery Universal 6000mAh|Oppo Find X3 5G, Oppo Reno 5 Pro Plus 5G, Oppo X3 Pro 5G, Oppo X3 Neo 5G
+BLP861 Dual Cell Battery Universal 4500mAh|OnePlus Nord 2 5G (DN2101), OnePlus Nord 2T 5G, OnePlus 9RT
+BLPB61 Dual Cell Battery Universal 5828mAh|Realme C75
+BLP835 Battery Universal|Oppo F19 Pro (CPH2285), Oppo Reno 5F, Oppo Reno 5 Lite (CPH2205), Oppo A94 4G (CPH2203)
+BLP825 Dual Cell Battery Universal 4500mAh|Oppo Reno 6 Pro Plus 5G, Oppo Find X3 Neo, Oppo Reno 5 Pro Plus 5G
+BLP889 Dual Cell Battery Universal 5000mAh|Oppo Find X5 Pro (CPH2305), Oppo A76, Oppo X3 Neo
+BLP849 Dual Cell Battery Universal 6000mAh|Realme GT 5G
+BLP863 Dual Cell Battery Universal 4500mAh|Oppo Reno 6 5G
+BLP887 Dual Cell Battery Universal 6000mAh|Realme GT Neo 2, Realme GT Pro 2, Oppo A76
+BLP747 Dual Cell Battery Universal 4000mAh|Oppo Reno Ace (PCLM10), Realme X2 Pro
+BLP993 Dual Cell Battery Universal 4700mAh|Oppo Reno 10 Pro Plus 5G
+BLP919 Dual Cell Battery Universal 4500mAh|Realme GT Neo 3
+BLP925 Dual Cell Battery Universal 6000mAh|OnePlus 10R 5G
+BLP905 Dual Cell Battery Universal 4500mAh|Oppo Reno 7 Pro 5G
+BLP903 Dual Cell Battery Universal 4500mAh|OnePlus 9 Pro
+BLPA33 Dual Cell Battery Universal 4500mAh|OnePlus 12R 5G
+BLPA25 Dual Cell Battery Universal 5400mAh|OnePlus 12 5G, Realme GT5 Pro
+BLP827 Dual Cell Battery Universal 4500mAh|OnePlus 9 Pro 5G
+BLP811 Dual Cell Battery Universal 4300mAh|Oppo Reno 5F, Oppo Reno 5 5G, Oppo Reno 5Z 5G, Oppo Reno 5 Lite, Oppo Find X3 Lite, Oppo Reno 4 SE, Oppo Reno 5
+BLP855 Dual Cell Battery Universal 4500mAh|Oppo Reno 7 5G, Oppo Reno 8 5G, Oppo Reno 6 Pro 5G, Oppo Find X5 Lite, Oppo Find X3 Neo, Oppo K9 Pro
+BLPA45 Dual Cell Battery Universal 5500mAh|Oppo K12 5G, OnePlus Nord CE4 5G

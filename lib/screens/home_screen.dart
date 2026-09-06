@@ -240,7 +240,7 @@ class _CategoryCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 2),
-                  Text('${category.modelCount} models',
+                  Text('${category.groupCount} lists • ${category.modelCount} models',
                       style: TextStyle(fontSize: 12, color: scheme.outline)),
                 ],
               ),

@@ -66,6 +66,8 @@ IconData iconFor(String key) {
       return Icons.developer_board_rounded;
     case 'frame':
       return Icons.crop_square_rounded;
+    case 'case':
+      return Icons.phonelink_ring_rounded;
     default:
       return Icons.smartphone_rounded;
   }

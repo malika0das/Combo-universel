@@ -21,6 +21,7 @@ class _SearchScreenState extends State<SearchScreen> {
       TextEditingController(text: widget.initialQuery);
   Timer? _debounce;
   String _query = '';
+  String? _categoryId;
   List<SearchHit> _hits = const [];
 
   @override
@@ -47,7 +48,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _run(String value) {
     final catalog = AppScope.of(context).catalog.catalog;
-    setState(() => _hits = catalog?.search(value) ?? const []);
+    setState(() => _hits = catalog?.search(value, categoryId: _categoryId) ?? const []);
     if (value.trim().length >= 3 && _hits.isNotEmpty) {
       AppScope.of(context).prefs.addRecent(value.trim());
     }
@@ -58,6 +59,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final scope = AppScope.of(context);
     final scheme = Theme.of(context).colorScheme;
     final hasQuery = _query.trim().isNotEmpty;
+    final categories = scope.catalog.catalog?.categories ?? const <Category>[];
     return Scaffold(
       appBar: AppBar(
         title: Hero(
@@ -89,7 +91,49 @@ class _SearchScreenState extends State<SearchScreen> {
         titleSpacing: 8,
       ),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
-      body: !hasQuery
+      body: Column(
+        children: [
+          if (hasQuery && categories.isNotEmpty)
+            SizedBox(
+              height: 48,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      label: const Text('All'),
+                      selected: _categoryId == null,
+                      onSelected: (_) {
+                        setState(() => _categoryId = null);
+                        _run(_query);
+                      },
+                    ),
+                  ),
+                  for (final c in categories)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: FilterChip(
+                        label: Text(c.name),
+                        selected: _categoryId == c.id,
+                        onSelected: (_) {
+                          setState(() => _categoryId = c.id);
+                          _run(_query);
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          Expanded(child: _buildResults(context, hasQuery, scheme)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResults(BuildContext context, bool hasQuery, ColorScheme scheme) {
+    return !hasQuery
           ? _Tips(onPick: (q) {
               _controller.text = q;
               _onChanged(q);
@@ -131,8 +175,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       subtitle: '${hit.category.name} • ${hit.brand.name}',
                     );
                   },
-                ),
-    );
+                );
   }
 }
 

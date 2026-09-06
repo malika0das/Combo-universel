@@ -21,11 +21,12 @@ class Catalog {
       );
 
   /// Flat list of every group with its category/brand context, used for search.
-  List<SearchHit> search(String rawQuery) {
+  List<SearchHit> search(String rawQuery, {String? categoryId, int limit = 400}) {
     final query = rawQuery.trim().toLowerCase();
     if (query.isEmpty) return const [];
     final hits = <SearchHit>[];
     for (final category in categories) {
+      if (categoryId != null && category.id != categoryId) continue;
       for (final brand in category.brands) {
         for (final group in brand.groups) {
           final matched = group.models
@@ -46,9 +47,11 @@ class Catalog {
     }
     hits.sort((a, b) {
       if (a.exact != b.exact) return a.exact ? -1 : 1;
-      return b.matchedModels.length.compareTo(a.matchedModels.length);
+      final byCount = b.matchedModels.length.compareTo(a.matchedModels.length);
+      if (byCount != 0) return byCount;
+      return a.group.code.compareTo(b.group.code);
     });
-    return hits;
+    return hits.length > limit ? hits.sublist(0, limit) : hits;
   }
 }
 
@@ -76,6 +79,8 @@ class Category {
 
   int get modelCount =>
       brands.fold(0, (sum, b) => sum + b.groups.fold(0, (s, g) => s + g.models.length));
+
+  int get groupCount => brands.fold(0, (sum, b) => sum + b.groups.length);
 }
 
 class Brand {
