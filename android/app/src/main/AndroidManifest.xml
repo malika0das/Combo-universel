@@ -45,11 +45,13 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- TODO: replace with your real AdMob application ID before release.
-             Test app ID is used by default so no live ads are served in dev. -->
+        <!-- AdMob application ID. Supplied by Gradle (see admobAppId in
+             android/app/build.gradle) so debug builds use Google's sample ID
+             and release builds use the real one. Shipping the sample ID to
+             production serves no ads and looks broken to reviewers. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="${admobAppId}" />
 
         <!-- Delay ad SDK initialisation until the app is ready: faster cold start. -->
         <meta-data

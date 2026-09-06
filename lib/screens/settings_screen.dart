@@ -26,7 +26,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final scope = AppScope.of(context);
     return AnimatedBuilder(
-      animation: Listenable.merge([scope.prefs, scope.catalog]),
+      animation: Listenable.merge([scope.prefs, scope.catalog, scope.ads]),
       builder: (context, _) => Scaffold(
         appBar: AppBar(title: const Text('Settings')),
         body: ListView(
@@ -67,6 +67,19 @@ class SettingsScreen extends StatelessWidget {
                       scope.ads.setPersonalized(v);
                     },
                   ),
+                  // Google requires EEA/UK users to be able to revisit their
+                  // consent choice at any time from a persistent control.
+                  if (scope.ads.privacyOptionsRequired) ...[
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.privacy_tip_outlined),
+                      title: const Text('Privacy options'),
+                      subtitle: const Text(
+                          'Review or change your ad consent choices.'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => scope.ads.showPrivacyOptions(),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -143,6 +156,17 @@ class SettingsScreen extends StatelessWidget {
                     title: const Text('Terms & disclaimer'),
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => const PolicyScreen(kind: PolicyKind.terms),
+                    )),
+                  ),
+                  const Divider(height: 1),
+                  // The SIL OFL and Apache-2.0 both require their notices to be
+                  // viewable by the end user, not just present in the bundle.
+                  ListTile(
+                    leading: const Icon(Icons.workspace_premium_outlined),
+                    title: const Text('Open source licences'),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) =>
+                          const PolicyScreen(kind: PolicyKind.licences),
                     )),
                   ),
                 ],

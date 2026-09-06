@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum PolicyKind { privacy, terms }
+enum PolicyKind { privacy, terms, licences }
 
 /// In-app copy of the policy documents. Play Console also requires a public
 /// URL - publish the same text at https://combouniversal.com/privacy-policy/.
@@ -23,7 +23,7 @@ Recent searches, saved lists, theme choice and the downloaded compatibility list
 The app downloads an updated compatibility list from our server. This request contains no personal identifiers beyond the standard information every internet request includes (such as your IP address, handled by our hosting provider).
 
 4. Advertising
-We show ads from Google AdMob to keep the app free. Google may use a device advertising identifier to serve and measure ads. You can switch to non-personalised ads at any time in Settings, and you can reset or delete the advertising ID in your Android settings. Google's practices are described at https://policies.google.com/technologies/ads
+We show ads from Google AdMob to keep the app free. Google may use a device advertising identifier to serve and measure ads. If you are in the European Economic Area, the UK or Switzerland, we ask for your consent through Google's official consent form before any ad is loaded, and no ad is requested if you decline. You can review or change that choice at any time from Settings, switch to non-personalised ads, and reset or delete the advertising ID in your Android settings. Google's practices are described at https://policies.google.com/technologies/ads
 
 5. Children
 The app is intended for mobile repair professionals and shop owners and is not directed at children under 13.
@@ -57,27 +57,83 @@ The compatibility data is community contributed and provided "as is" for guidanc
 We are not liable for any loss, damaged part, damaged device or business loss arising from the use of this information. The final decision to fit a part is yours.
 
 4. No affiliation
-Brand names such as Samsung, Xiaomi, Redmi, Vivo, iQOO, Oppo, Realme, OnePlus, Apple, Motorola, Infinix, Tecno, Itel, Lava and Honor are trademarks of their respective owners. This app is an independent reference tool and is not endorsed by or affiliated with any of them. Brand names are used only to describe part compatibility.
+Brand names such as Samsung, Xiaomi, Redmi, Vivo, iQOO, Oppo, Realme, OnePlus, Apple, Motorola, Infinix, Tecno, Itel, Lava and Honor are trademarks of their respective owners. This app is an independent reference tool and is not endorsed by, affiliated with, or sponsored by any of them. Model names appear only to describe which spare part physically fits which handset, which is a factual statement of compatibility.
 
-5. Acceptable use
-Do not scrape, resell or redistribute the data as your own product.
+5. Where the data comes from
+The compatibility list is compiled by Makund Mobile from its own published listings at combouniversal.com and combosupport.in, together with parts tested in our own workshop. It is not copied from any other app or database.
 
-6. Ads
-The app is free and supported by advertising. Ad content is served by Google and is not selected or endorsed by us.
+6. Acceptable use
+The compiled list is our own work. Please do not scrape, resell or redistribute it as your own product. You are of course free to use the information to run your repair business.
 
-7. Contact
+7. Reporting a problem
+If you believe anything in this app infringes your rights, contact us on the WhatsApp number below and we will review and remove it promptly.
+
+8. Ads
+The app is free and supported by advertising. Ad content is served by Google and is not selected or endorsed by us. In the EEA and UK you are asked for consent before any ad loads, and you can change that choice at any time from Settings.
+
+9. Contact
 WhatsApp: +91 72057 02493
+''';
+
+  static const _titles = <PolicyKind, String>{
+    PolicyKind.privacy: 'Privacy policy',
+    PolicyKind.terms: 'Terms & disclaimer',
+    PolicyKind.licences: 'Open source licences',
+  };
+
+  static const _bodies = <PolicyKind, String>{
+    PolicyKind.privacy: _privacy,
+    PolicyKind.terms: _terms,
+    PolicyKind.licences: _licences,
+  };
+
+  static const _licences = '''
+Open Source Licences — Combo Universal
+Last updated: 7 September 2026
+
+1. Typefaces
+This app bundles the Sora, Inter and JetBrains Mono typefaces. All three are licensed under the SIL Open Font License, Version 1.1. The full licence text ships with the app in assets/google_fonts/OFL.txt. Sora is copyright The Sora Project Authors, Inter is copyright The Inter Project Authors, and JetBrains Mono is copyright The JetBrains Mono Project Authors.
+
+2. Software libraries
+The app is built with Flutter, which is copyright The Flutter Authors and licensed under the BSD 3-Clause License. It also uses the google_mobile_ads, shared_preferences, http and url_launcher packages. Tap the button below for the complete, generated list of every package and its licence.
+
+3. Icons
+Interface icons are Material Symbols, copyright Google, licensed under the Apache License 2.0.
+
+4. Compatibility data
+The compatibility list is compiled by Makund Mobile from its own published listings and its own workshop testing. It is not derived from any third-party app or database.
+
+5. Trademarks
+Manufacturer and model names are trademarks of their respective owners and are used here only to state which spare part fits which handset. No manufacturer logo or wordmark is used anywhere in this app.
 ''';
 
   @override
   Widget build(BuildContext context) {
-    final privacy = kind == PolicyKind.privacy;
     return Scaffold(
-      appBar: AppBar(
-          title: Text(privacy ? 'Privacy policy' : 'Terms & disclaimer')),
+      appBar: AppBar(title: Text(_titles[kind]!)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        child: _PolicyBody(text: privacy ? _privacy : _terms),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PolicyBody(text: _bodies[kind]!),
+            if (kind == PolicyKind.licences) ...[
+              const SizedBox(height: 12),
+              // Flutter's built-in registry lists every package licence.
+              OutlinedButton.icon(
+                icon: const Icon(Icons.description_outlined),
+                label: const Text('View full package licences'),
+                onPressed: () => showLicensePage(
+                  context: context,
+                  applicationName: 'Combo Universal',
+                  applicationLegalese:
+                      '\u00a9 2026 Makund Mobile. Brand names are trademarks of '
+                      'their respective owners.',
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

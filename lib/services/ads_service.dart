@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
@@ -30,6 +31,8 @@ class AdIds {
 class AdsService extends ChangeNotifier {
   bool _initialized = false;
   bool _personalized = false;
+  bool _canRequestAds = false;
+  bool _privacyOptionsRequired = false;
   InterstitialAd? _interstitial;
   int _navCount = 0;
   DateTime? _lastInterstitial;
@@ -43,11 +46,79 @@ class AdsService extends ChangeNotifier {
   static const Duration interstitialCooldown = Duration(minutes: 2);
 
   bool get supported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-  bool get initialized => _initialized;
+
+  /// True only once the SDK is up *and* consent allows an ad request. Every ad
+  /// widget must gate on this, not merely on initialisation.
+  bool get initialized => _initialized && _canRequestAds;
+
+  /// Whether to show the "Privacy options" entry in Settings. Google requires
+  /// a persistent way for EEA/UK users to change their consent choice.
+  bool get privacyOptionsRequired => _privacyOptionsRequired;
+
+  /// Gathers GDPR/ePrivacy consent through Google's User Messaging Platform
+  /// before any ad is requested. Serving ads in the EEA or UK without this is
+  /// an AdMob policy violation and a common Play review rejection.
+  Future<void> _gatherConsent() async {
+    final completer = Completer<void>();
+    ConsentInformation.instance.requestConsentInfoUpdate(
+      ConsentRequestParameters(),
+      () async {
+        try {
+          await ConsentForm.loadAndShowConsentFormIfRequired((error) {
+            if (error != null) {
+              debugPrint('Consent form error: ${error.message}');
+            }
+          });
+        } finally {
+          if (!completer.isCompleted) completer.complete();
+        }
+      },
+      (error) {
+        debugPrint('Consent info error: ${error.message}');
+        if (!completer.isCompleted) completer.complete();
+      },
+    );
+    // Never let a slow or failed consent round-trip hang startup.
+    await completer.future.timeout(
+      const Duration(seconds: 8),
+      onTimeout: () {},
+    );
+
+    try {
+      _canRequestAds = await ConsentInformation.instance.canRequestAds();
+      _privacyOptionsRequired =
+          await ConsentInformation.instance.getPrivacyOptionsRequirementStatus() ==
+              PrivacyOptionsRequirementStatus.required;
+    } catch (_) {
+      // If consent state cannot be read, stay silent rather than risk serving
+      // a non-compliant ad.
+      _canRequestAds = false;
+    }
+  }
+
+  /// Re-opens the consent form so a user can change their choice later.
+  Future<void> showPrivacyOptions() async {
+    if (!supported) return;
+    await ConsentForm.showPrivacyOptionsForm((error) {
+      if (error != null) debugPrint('Privacy options error: ${error.message}');
+    });
+    _canRequestAds = await ConsentInformation.instance.canRequestAds();
+    notifyListeners();
+  }
+
+  /// Clears consent state. Debug helper for testing the flow repeatedly.
+  Future<void> resetConsent() async {
+    ConsentInformation.instance.reset();
+    _canRequestAds = false;
+    notifyListeners();
+  }
 
   Future<void> init({required bool personalized}) async {
     _personalized = personalized;
     if (!supported) return;
+
+    await _gatherConsent();
+
     await MobileAds.instance.initialize();
     await MobileAds.instance.updateRequestConfiguration(
       RequestConfiguration(
@@ -56,7 +127,7 @@ class AdsService extends ChangeNotifier {
       ),
     );
     _initialized = true;
-    _preloadInterstitial();
+    if (_canRequestAds) _preloadInterstitial();
     notifyListeners();
   }
 
@@ -88,7 +159,7 @@ class AdsService extends ChangeNotifier {
   }
 
   void _preloadInterstitial() {
-    if (!supported || _interstitial != null) return;
+    if (!supported || !_canRequestAds || _interstitial != null) return;
     InterstitialAd.load(
       adUnitId: AdIds.interstitial,
       request: request,
@@ -101,7 +172,7 @@ class AdsService extends ChangeNotifier {
 
   /// Call on meaningful navigation events (e.g. opening a group detail).
   void maybeShowInterstitial() {
-    if (!supported) return;
+    if (!supported || !_canRequestAds) return;
     _navCount++;
     if (_navCount % interstitialEvery != 0) return;
 

@@ -42,6 +42,13 @@ android {
         targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+
+        // Real AdMob app ID comes from android/key.properties (or -PadmobAppId)
+        // and is never committed. Falls back to Google's public sample ID.
+        def realAdmobAppId = localProperties.getProperty('admob.appId')
+        manifestPlaceholders += [
+            admobAppId: realAdmobAppId ?: 'ca-app-pub-3940256099942544~3347511713'
+        ]
         resourceConfigurations += ['en', 'hi']
     }
 

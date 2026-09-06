@@ -26,4 +26,20 @@ Answer the form exactly like this for the current code.
 | `ACCESS_NETWORK_STATE` | Detect offline state so updates fail gracefully |
 | `com.google.android.gms.permission.AD_ID` | Required by AdMob on Android 13+ |
 
+## Consent (EEA / UK / Switzerland)
+
+Before any ad is requested, the app runs Google's User Messaging Platform
+consent flow (`AdsService._gatherConsent()`). If the user declines, or if the
+consent state cannot be determined, `AdsService.initialized` stays false and
+**no ad is ever requested** - banners render at zero height and interstitials
+are skipped.
+
+Users in a region where consent is required also get a persistent
+**Settings -> Privacy options** entry so they can change their choice later, as
+Google's EU user consent policy requires.
+
+When answering the Play data safety form, declare the advertising ID as
+*collected and shared* for "Advertising or marketing", marked **optional**,
+because the user can decline consent and can switch to non-personalised ads.
+
 No sensitive permissions (no location, camera, storage, contacts, SMS, QUERY_ALL_PACKAGES, or foreground service) are requested — this avoids Play's declaration forms entirely.
