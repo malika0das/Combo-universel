@@ -1,0 +1,62 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'app_scope.dart';
+import 'screens/home_screen.dart';
+import 'services/ads_service.dart';
+import 'services/catalog_service.dart';
+import 'services/prefs_service.dart';
+import 'theme.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+
+  final prefs = PrefsService();
+  await prefs.init();
+
+  final catalog = CatalogService();
+  final ads = AdsService();
+
+  // Non-blocking: the UI shows bundled data immediately.
+  unawaited(catalog.init());
+  unawaited(ads.init(personalized: prefs.personalizedAds));
+
+  runApp(ComboUniversalApp(prefs: prefs, catalog: catalog, ads: ads));
+}
+
+class ComboUniversalApp extends StatelessWidget {
+  const ComboUniversalApp({
+    super.key,
+    required this.prefs,
+    required this.catalog,
+    required this.ads,
+  });
+
+  final PrefsService prefs;
+  final CatalogService catalog;
+  final AdsService ads;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScope(
+      catalog: catalog,
+      prefs: prefs,
+      ads: ads,
+      child: AnimatedBuilder(
+        animation: prefs,
+        builder: (context, _) => MaterialApp(
+          title: 'Combo Universal',
+          debugShowCheckedModeBanner: false,
+          theme: buildTheme(Brightness.light),
+          darkTheme: buildTheme(Brightness.dark),
+          themeMode: prefs.dark ? ThemeMode.dark : ThemeMode.light,
+          home: const HomeScreen(),
+        ),
+      ),
+    );
+  }
+}

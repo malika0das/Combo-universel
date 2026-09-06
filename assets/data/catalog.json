@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "updatedAt": "2026-09-07",
+  "source": "bundled",
+  "notice": "Compatibility data is community contributed. Always physically verify connector, flex length and frame fit before fitting a part.",
+  "categories": [
+    {
+      "id": "combo",
+      "name": "Folder / Display / Combo",
+      "icon": "display",
+      "brands": [
+        {
+          "id": "vivo_iqoo",
+          "name": "Vivo, iQOO",
+          "groups": [
+            {
+              "code": "VIVO-IPS-6.51-A",
+              "title": "Vivo Y21 / Y21s / Y33s Combo Group",
+              "quality": "IPS LCD 6.51\"",
+              "models": ["Vivo Y21", "Vivo Y21s", "Vivo Y21A", "Vivo Y21T", "Vivo Y33s", "Vivo Y33T", "Vivo Y15s", "Vivo Y15A", "Vivo Y01"],
+              "note": "Same panel and connector. Y01 needs frame swap."
+            },
+            {
+              "code": "VIVO-AMO-6.44-B",
+              "title": "Vivo V20 / V20 Pro AMOLED Group",
+              "quality": "AMOLED 6.44\"",
+              "models": ["Vivo V20", "Vivo V20 Pro", "Vivo V20 SE", "Vivo S7e"],
+              "note": "Fingerprint calibration may be needed after replacement."
+            },
+            {
+              "code": "IQOO-IPS-6.58-C",
+              "title": "iQOO Z3 / Z5x Combo Group",
+              "quality": "IPS LCD 6.58\"",
+              "models": ["iQOO Z3 5G", "iQOO Z5x", "Vivo Y72 5G", "Vivo Y73t"],
+              "note": "Check flex cable length before ordering."
+            }
+          ]
+        },
+        {
+          "id": "samsung",
+          "name": "Samsung",
+          "groups": [
+            {
+              "code": "SAM-A10-GRP",
+              "title": "Galaxy A10 / M10 Combo Group",
+              "quality": "IPS LCD 6.2\"",
+              "models": ["Samsung Galaxy A10", "Samsung Galaxy M10", "Samsung Galaxy A10s", "Samsung Galaxy M01s"],
+              "note": "A10s uses a different touch flex position on some batches."
+            },
+            {
+              "code": "SAM-A51-GRP",
+              "title": "Galaxy A51 AMOLED Group",
+              "quality": "Super AMOLED 6.5\"",
+              "models": ["Samsung Galaxy A51", "Samsung Galaxy M31s", "Samsung Galaxy A51 5G"],
+              "note": "Under display fingerprint - use original grade panel."
+            }
+          ]
+        },
+        {
+          "id": "xiaomi",
+          "name": "Xiaomi, Redmi, Poco, Mi",
+          "groups": [
+            {
+              "code": "MI-NOTE8-GRP",
+              "title": "Redmi Note 8 / Note 8T Group",
+              "quality": "IPS LCD 6.3\"",
+              "models": ["Redmi Note 8", "Redmi Note 8T", "Redmi 8A Dual"],
+              "note": "Frame differs - order combo with frame for Note 8T."
+            },
+            {
+              "code": "MI-9A-GRP",
+              "title": "Redmi 9A / 9i / Poco C31 Group",
+              "quality": "IPS LCD 6.53\"",
+              "models": ["Redmi 9A", "Redmi 9i", "Redmi 9 Activ", "Poco C31", "Redmi 10A", "Redmi 9A Sport"],
+              "note": "Fully interchangeable."
+            }
+          ]
+        },
+        {
+          "id": "realme_oppo",
+          "name": "Realme, Oppo, OnePlus",
+          "groups": [
+            {
+              "code": "RM-C11-GRP",
+              "title": "Realme C11 / C12 / C15 Group",
+              "quality": "IPS LCD 6.5\"",
+              "models": ["Realme C11", "Realme C12", "Realme C15", "Realme C11 2021", "Realme Narzo 20A", "Oppo A15"],
+              "note": "Oppo A15 needs frame change."
+            },
+            {
+              "code": "OP-A6-5G",
+              "title": "Oppo A6 5G Combo Group",
+              "quality": "IPS LCD 6.67\"",
+              "models": ["Oppo A6 5G", "Oppo A5 5G", "Realme Note 60x"],
+              "note": "New 2026 addition."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "battery",
+      "name": "Battery List",
+      "icon": "battery",
+      "brands": [
+        {
+          "id": "xiaomi",
+          "name": "Xiaomi, Redmi, Poco",
+          "groups": [
+            {
+              "code": "BN5X-GRP",
+              "title": "BN5x Family (5000 mAh)",
+              "quality": "5000 mAh Li-Po",
+              "models": ["Redmi 9", "Redmi 9 Prime", "Poco M2", "Redmi Note 9", "Redmi 10 Prime"],
+              "note": "BN54 / BN5A connectors are compatible, check flex direction."
+            }
+          ]
+        },
+        {
+          "id": "samsung",
+          "name": "Samsung",
+          "groups": [
+            {
+              "code": "EB-BA750",
+              "title": "EB-BA750ABU Group",
+              "quality": "3400 mAh",
+              "models": ["Samsung Galaxy A10", "Samsung Galaxy A7 2018", "Samsung Galaxy M10"],
+              "note": "Same cell, different sticker codes."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tempered",
+      "name": "Tempered / Screen Guard",
+      "icon": "glass",
+      "brands": [
+        {
+          "id": "universal",
+          "name": "All Brands",
+          "groups": [
+            {
+              "code": "TG-6.5-A",
+              "title": "6.5\" Waterdrop Notch Group",
+              "quality": "2.5D Full Glue",
+              "models": ["Realme C11", "Realme C15", "Oppo A15", "Redmi 9A", "Poco C31"],
+              "note": "Same cut size - single tempered fits all."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ccboard",
+      "name": "CC / Sub Board",
+      "icon": "board",
+      "brands": [
+        {
+          "id": "vivo_iqoo",
+          "name": "Vivo, iQOO",
+          "groups": [
+            {
+              "code": "CC-Y21-GRP",
+              "title": "Vivo Y21 Series Sub Board",
+              "quality": "Type-C charging board",
+              "models": ["Vivo Y21", "Vivo Y21s", "Vivo Y33s", "Vivo Y15s"],
+              "note": "Mic hole placement identical."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "frame",
+      "name": "Frame / Middle Frame",
+      "icon": "frame",
+      "brands": [
+        {
+          "id": "xiaomi",
+          "name": "Xiaomi, Redmi",
+          "groups": [
+            {
+              "code": "FR-N10-GRP",
+              "title": "Redmi Note 10 Frame Group",
+              "quality": "Middle frame",
+              "models": ["Redmi Note 10", "Redmi Note 10S", "Poco M5s"],
+              "note": "2026 update."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

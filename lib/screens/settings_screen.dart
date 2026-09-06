@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../app_scope.dart';
+import 'policy_screen.dart';
+
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
+
+  static const _site = 'https://combouniversal.com/';
+  static const _support = 'https://combosupport.in/';
+  static const _whatsapp = 'https://wa.me/917205702493';
+  static const _playUrl =
+      'https://play.google.com/store/apps/details?id=com.makund.combouniversal';
+
+  Future<void> _open(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = AppScope.of(context);
+    return AnimatedBuilder(
+      animation: Listenable.merge([scope.prefs, scope.catalog]),
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(title: const Text('Settings')),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Card(
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: const Text('Dark theme'),
+                    secondary: const Icon(Icons.dark_mode_outlined),
+                    value: scope.prefs.dark,
+                    onChanged: scope.prefs.setDark,
+                  ),
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    title: const Text('Personalised ads'),
+                    subtitle: const Text(
+                        'Turn off to see only non-personalised ads. The app stays free either way.'),
+                    secondary: const Icon(Icons.ads_click_rounded),
+                    value: scope.prefs.personalizedAds,
+                    onChanged: (v) {
+                      scope.prefs.setPersonalizedAds(v);
+                      scope.ads.setPersonalized(v);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.sync_rounded),
+                    title: const Text('Check for list update'),
+                    subtitle: Text(
+                        'Current version ${scope.catalog.catalog?.version ?? '-'} (${scope.catalog.source})'),
+                    trailing: scope.catalog.refreshing
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.chevron_right_rounded),
+                    onTap: () async {
+                      final updated = await scope.catalog
+                          .refreshFromRemote(userInitiated: true);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(updated
+                              ? 'List updated.'
+                              : 'You already have the latest list.'),
+                        ));
+                      }
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.public_rounded),
+                    title: const Text('Combo Universal website'),
+                    onTap: () => _open(_site),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.support_agent_rounded),
+                    title: const Text('Combo Support'),
+                    onTap: () => _open(_support),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.chat_rounded),
+                    title: const Text('Contact on WhatsApp'),
+                    onTap: () => _open(_whatsapp),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.star_rate_rounded),
+                    title: const Text('Rate this app'),
+                    onTap: () => _open(_playUrl),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.privacy_tip_outlined),
+                    title: const Text('Privacy policy'),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const PolicyScreen(kind: PolicyKind.privacy),
+                    )),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.gavel_rounded),
+                    title: const Text('Terms & disclaimer'),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const PolicyScreen(kind: PolicyKind.terms),
+                    )),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snap) => Center(
+                child: Text(
+                  snap.hasData
+                      ? 'Version ${snap.data!.version} (${snap.data!.buildNumber})'
+                      : '',
+                  style: TextStyle(color: Theme.of(context).colorScheme.outline),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
