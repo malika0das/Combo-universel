@@ -30,9 +30,28 @@ Offline-first universal compatibility list (combo/display, battery, tempered gla
 
 **Shop notes** — a private, on-device note against any part list.
 
-**Accessibility** — in-app text size slider (85–150%) layered on top of the system setting, plus dark mode. Everything works fully offline.
+**Proactive UX** — the home screen reads on-device signals (time of day, repeated searches, a waiting order list) and offers the single most useful next step: resume a job you keep searching, send an order that has been sitting, or compare the two phones you just looked up. At most one suggestion at a time, always dismissible, never nagging. All signals stay on the device.
+
+**Emotionally intelligent copy** — a time-aware greeting, and failure states that name what you typed and offer a route forward instead of a dead end. Haptics form a small vocabulary: selection for navigation, light impact for "added", medium for "removed".
+
+**Motion & 3D** — real perspective transforms (`Matrix4` with a perspective term), not shadows faking depth: cards tilt toward your finger, a lit orb rotates in empty states, and two phone silhouettes swing together with a burst when a shared part is found. Lists cascade in, counters roll up, skeletons shimmer while a search debounces.
+
+**Accessibility** — in-app text size slider (85–150%) layered on top of the system setting, plus dark mode. Everything works fully offline. Every animation honours the OS "reduce motion" setting through a single `Motion.reduced` gate.
+
+**Responsive** — content-driven breakpoints at 600 and 905 logical pixels: one column on phones, two on tablets, with page padding that grows and a max content width so model names never stretch into unreadable lines. Orientation is deliberately unlocked for bench use.
 
 ## Design system
+
+**Motion** — one scale in `lib/motion.dart` (90 / 180 / 280 / 460 ms) with
+`easeOutCubic` in and `easeInCubic` out, so things leave faster than they
+arrive. Nothing exceeds 500 ms: this is a tool used with a customer waiting.
+Staggered list entrances cap at 12 items so a 1,000-row list never makes the
+user wait for a cascade.
+
+**Depth** — `TiltCard` and `DepthOrb` use genuine perspective matrices with a
+moving light source and rim lighting, so surfaces read as lit objects rather
+than gradient rectangles. Tilt is capped at ~0.16 rad; a bigger angle reads as
+a gimmick and hurts legibility.
 
 **Typography** — three Google Fonts, each doing one job:
 
@@ -73,7 +92,12 @@ lib/
   theme.dart             Material 3 theme
   models/catalog.dart    Catalog/Category/Brand/ComboGroup + simple search
   theme.dart             brand palette, type scale, component themes
+  motion.dart            durations, curves, haptics, entrance/press primitives
+  responsive.dart        breakpoints, PageBody, AdaptiveCardList
   widgets/ui.dart        CodeChip / SoftBadge / SectionHeader / EmptyState
+  widgets/dimensional.dart  TiltCard / DepthOrb / CompatibilityGlyph / burst
+  widgets/insight_card.dart proactive suggestion card
+  services/insight_service.dart  on-device signals -> next best action
   services/search_engine.dart  typo-tolerant index, autocomplete, model profiles
   screens/model_screen.dart    every part that fits one phone
   screens/compare_screen.dart  shared-part finder for 2+ phones

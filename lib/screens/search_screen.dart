@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../motion.dart';
+import '../responsive.dart';
+import '../services/insight_service.dart';
 import '../services/search_engine.dart';
 import '../theme.dart';
+import '../widgets/dimensional.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/ui.dart';
 import 'group_screen.dart';
@@ -29,6 +33,7 @@ class _SearchScreenState extends State<SearchScreen> {
   SearchResult _result = const SearchResult(
       hits: [], suggestions: [], scopedCategoryId: null, fuzzy: false);
   List<String> _completions = const [];
+  bool _searching = false;
 
   List<SearchHit> get _hits => _result.hits;
 
@@ -53,6 +58,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       _query = value;
       _completions = engine?.complete(value, limit: 6) ?? const [];
+      _searching = value.trim().isNotEmpty;
     });
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 180), () => _run(value));
@@ -64,7 +70,14 @@ class _SearchScreenState extends State<SearchScreen> {
     final result = engine?.search(value, categoryId: _categoryId) ??
         const SearchResult(
             hits: [], suggestions: [], scopedCategoryId: null, fuzzy: false);
-    setState(() => _result = result);
+    final hadHits = _result.hits.isNotEmpty;
+    setState(() {
+      _result = result;
+      _searching = false;
+    });
+    // A short haptic when a search goes from "nothing" to "found" — the user
+    // feels the answer arrive without looking up from the phone in their hand.
+    if (!hadHits && result.hits.isNotEmpty) Haptics.confirm();
     if (value.trim().length >= 3 && result.hits.isNotEmpty) {
       scope.prefs.addRecent(value.trim());
     }
@@ -122,6 +135,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       label: const Text('All'),
                       selected: _categoryId == null,
                       onSelected: (_) {
+                        Haptics.tap();
                         setState(() => _categoryId = null);
                         _run(_query);
                       },
@@ -134,6 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         label: Text(c.name),
                         selected: _categoryId == c.id,
                         onSelected: (_) {
+                          Haptics.tap();
                           setState(() => _categoryId = c.id);
                           _run(_query);
                         },
@@ -155,6 +170,10 @@ class _SearchScreenState extends State<SearchScreen> {
               _controller.text = q;
               _onChanged(q);
             })
+          // While the debounce is pending, show shaped skeletons rather than a
+          // spinner: the layout does not jump when the real results land.
+          : (_searching && _hits.isEmpty)
+              ? const _ResultSkeletons()
           : _hits.isEmpty
               ? Center(
                   child: Padding(
@@ -162,23 +181,23 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 68,
-                          height: 68,
-                          decoration: BoxDecoration(
-                            color: scheme.primary.withValues(alpha: 0.08),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.search_off_rounded,
-                              size: 30, color: scheme.primary),
+                        DepthOrb(
+                          color: scheme.primary,
+                          size: 92,
+                          icon: Icons.search_rounded,
                         ),
                         Gap.lg,
-                        Text('No match for "${_query.trim()}"',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          _result.suggestions.isEmpty
+                              ? 'Nothing found yet'
+                              : 'Close, but not exact',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         Gap.sm,
                         Text(
-                          'Try a shorter keyword like "9A" or "Y21".',
+                          InsightService.emptyMessage(
+                              _query.trim(), _result.suggestions.isNotEmpty),
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
@@ -207,7 +226,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(
+                      context.pagePadding, 12, context.pagePadding, 24),
                   itemCount: _hits.length + 1,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, i) {
@@ -245,23 +265,84 @@ class _SearchScreenState extends State<SearchScreen> {
                               ),
                             ),
                           const SizedBox(height: 6),
-                          Text(
-                            '${_hits.length} matching list${_hits.length == 1 ? '' : 's'}'
-                            '${scopedName == null ? '' : ' in $scopedName'}'
-                            '${_result.fuzzy ? ' · showing close matches' : ''}',
-                            style: Theme.of(context).textTheme.labelSmall,
+                          Row(
+                            children: [
+                              AnimatedCounter(
+                                value: _hits.length,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              Text(
+                                ' matching list${_hits.length == 1 ? '' : 's'}'
+                                '${scopedName == null ? '' : ' in $scopedName'}'
+                                '${_result.fuzzy ? ' · showing close matches' : ''}',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ],
                           ),
                         ],
                       );
                     }
                     final hit = _hits[i - 1];
-                    return GroupCard(
-                      group: hit.group,
-                      query: _query,
-                      subtitle: '${hit.category.name} • ${hit.brand.name}',
+                    return EntranceFade(
+                      index: i - 1,
+                      child: GroupCard(
+                        group: hit.group,
+                        query: _query,
+                        subtitle: '${hit.category.name} · ${hit.brand.name}',
+                      ),
                     );
                   },
                 );
+  }
+}
+
+/// Skeleton placeholders shaped like GroupCards.
+class _ResultSkeletons extends StatelessWidget {
+  const _ResultSkeletons();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    Widget bar(double width, double height) => Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        );
+    return Shimmer(
+      child: ListView.separated(
+        padding: EdgeInsets.fromLTRB(
+            context.pagePadding, 12, context.pagePadding, 24),
+        itemCount: 5,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, i) => Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: scheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              bar(double.infinity, 14),
+              const SizedBox(height: 8),
+              bar(140, 10),
+              const SizedBox(height: 14),
+              Row(children: [
+                bar(64, 22),
+                const SizedBox(width: 6),
+                bar(78, 22),
+                const SizedBox(width: 6),
+                bar(52, 22),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

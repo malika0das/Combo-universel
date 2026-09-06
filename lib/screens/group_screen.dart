@@ -4,6 +4,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../motion.dart';
+import '../responsive.dart';
 import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/highlight_text.dart';
@@ -28,15 +30,14 @@ class GroupCard extends StatelessWidget {
     final scope = AppScope.of(context);
     final scheme = Theme.of(context).colorScheme;
     final preview = group.models.take(4).toList();
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          scope.ads.maybeShowInterstitial();
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => GroupScreen(group: group, query: query),
-          ));
-        },
+    return PressableScale(
+      onTap: () {
+        scope.ads.maybeShowInterstitial();
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => GroupScreen(group: group, query: query),
+        ));
+      },
+      child: Card(
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -59,16 +60,24 @@ class GroupCard extends StatelessWidget {
                       tooltip: scope.prefs.inStockList(group.code)
                           ? 'In order list'
                           : 'Add to order list',
-                      icon: Icon(
-                        scope.prefs.inStockList(group.code)
-                            ? Icons.shopping_cart_rounded
-                            : Icons.add_shopping_cart_outlined,
-                        size: 20,
-                        color: scope.prefs.inStockList(group.code)
-                            ? scheme.primary
-                            : null,
+                      icon: SoftSwitcher(
+                        child: Icon(
+                          scope.prefs.inStockList(group.code)
+                              ? Icons.shopping_cart_rounded
+                              : Icons.add_shopping_cart_outlined,
+                          key: ValueKey(scope.prefs.inStockList(group.code)),
+                          size: 20,
+                          color: scope.prefs.inStockList(group.code)
+                              ? scheme.primary
+                              : null,
+                        ),
                       ),
-                      onPressed: () => scope.prefs.toggleStock(group.code),
+                      onPressed: () {
+                        scope.prefs.inStockList(group.code)
+                            ? Haptics.warn()
+                            : Haptics.confirm();
+                        scope.prefs.toggleStock(group.code);
+                      },
                     ),
                   ),
                   AnimatedBuilder(
@@ -76,15 +85,23 @@ class GroupCard extends StatelessWidget {
                     builder: (context, _) => IconButton(
                       visualDensity: VisualDensity.compact,
                       tooltip: 'Save',
-                      icon: Icon(
-                        scope.prefs.isSaved(group.code)
-                            ? Icons.bookmark_rounded
-                            : Icons.bookmark_border_rounded,
-                        color: scope.prefs.isSaved(group.code)
-                            ? scheme.primary
-                            : null,
+                      icon: SoftSwitcher(
+                        child: Icon(
+                          scope.prefs.isSaved(group.code)
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          key: ValueKey(scope.prefs.isSaved(group.code)),
+                          color: scope.prefs.isSaved(group.code)
+                              ? scheme.primary
+                              : null,
+                        ),
                       ),
-                      onPressed: () => scope.prefs.toggleSaved(group.code),
+                      onPressed: () {
+                        scope.prefs.isSaved(group.code)
+                            ? Haptics.warn()
+                            : Haptics.confirm();
+                        scope.prefs.toggleSaved(group.code);
+                      },
                     ),
                   ),
                 ],
@@ -216,6 +233,9 @@ class GroupScreen extends StatelessWidget {
                   ? Icons.shopping_cart_rounded
                   : Icons.add_shopping_cart_outlined),
               onPressed: () {
+                scope.prefs.inStockList(group.code)
+                    ? Haptics.warn()
+                    : Haptics.confirm();
                 scope.prefs.toggleStock(group.code);
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(scope.prefs.inStockList(group.code)
@@ -245,8 +265,10 @@ class GroupScreen extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: PageBody(
+        child: ListView(
+        padding: EdgeInsets.fromLTRB(
+            context.pagePadding, 12, context.pagePadding, 24),
         children: [
           Text(group.title, style: Theme.of(context).textTheme.headlineSmall),
           Gap.md,
@@ -354,6 +376,7 @@ class GroupScreen extends StatelessWidget {
           Gap.lg,
           const VerifyNotice(),
         ],
+        ),
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../motion.dart';
+import '../responsive.dart';
 import '../services/search_engine.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/ui.dart';
@@ -67,7 +69,8 @@ class _ModelsAzScreenState extends State<ModelsAzScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
+                  child: PageBody(
+                    child: ListView.builder(
                     itemCount: models.length,
                     itemExtent: 52,
                     itemBuilder: (context, i) {
@@ -100,11 +103,15 @@ class _ModelsAzScreenState extends State<ModelsAzScreen> {
                             : const SizedBox(width: 28),
                         title: Text(model),
                         trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => ModelScreen(model: model),
-                        )),
+                        onTap: () {
+                          Haptics.tap();
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => ModelScreen(model: model),
+                          ));
+                        },
                       );
-                    },
+                      },
+                    ),
                   ),
                 ),
               ],

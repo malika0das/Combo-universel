@@ -24,8 +24,8 @@ Future<void> main() async {
     systemNavigationBarColor: Colors.transparent,
   ));
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  await SystemChrome.setPreferredOrientations(
-      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+  // Orientation is intentionally NOT locked: tablets and foldables on a repair
+  // bench are commonly used in landscape, and the layouts are responsive.
 
   final prefs = PrefsService();
   await prefs.init();

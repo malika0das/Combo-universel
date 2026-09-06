@@ -11,6 +11,7 @@ class PrefsService extends ChangeNotifier {
   static const _listKey = 'stock_list';
   static const _notesKey = 'group_notes';
   static const _fontKey = 'font_scale';
+  static const _dismissedKey = 'dismissed_insights';
   static const maxRecent = 12;
 
   SharedPreferences? _prefs;
@@ -22,6 +23,7 @@ class PrefsService extends ChangeNotifier {
   List<String> _stock = const [];
   Map<String, String> _notes = const {};
   double _fontScale = 1.0;
+  List<String> _dismissed = const [];
 
   List<String> get recent => _recent;
   List<String> get saved => _saved;
@@ -35,6 +37,9 @@ class PrefsService extends ChangeNotifier {
   Map<String, String> get notes => _notes;
   double get fontScale => _fontScale;
 
+  /// Ids of proactive suggestions the user has waved away.
+  List<String> get dismissedInsights => _dismissed;
+
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     _recent = _prefs!.getStringList(_recentKey) ?? const [];
@@ -44,6 +49,7 @@ class PrefsService extends ChangeNotifier {
     _stock = _prefs!.getStringList(_listKey) ?? const [];
     _notes = _decodeNotes(_prefs!.getStringList(_notesKey) ?? const []);
     _fontScale = _prefs!.getDouble(_fontKey) ?? 1.0;
+    _dismissed = _prefs!.getStringList(_dismissedKey) ?? const [];
     notifyListeners();
   }
 
@@ -106,6 +112,16 @@ class PrefsService extends ChangeNotifier {
     _notes = next;
     await _prefs?.setStringList(
         _notesKey, next.entries.map((e) => '${e.key}\u0000${e.value}').toList());
+    notifyListeners();
+  }
+
+  bool isInsightDismissed(String id) => _dismissed.contains(id);
+
+  Future<void> dismissInsight(String id) async {
+    if (_dismissed.contains(id)) return;
+    // Keep the list bounded so it cannot grow forever.
+    _dismissed = [..._dismissed, id].reversed.take(40).toList().reversed.toList();
+    await _prefs?.setStringList(_dismissedKey, _dismissed);
     notifyListeners();
   }
 

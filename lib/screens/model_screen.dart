@@ -3,8 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../app_scope.dart';
+import '../motion.dart';
+import '../responsive.dart';
 import '../services/search_engine.dart';
 import '../theme.dart';
+import '../widgets/dimensional.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/ui.dart';
 import 'group_screen.dart';
@@ -58,14 +61,19 @@ class ModelScreen extends StatelessWidget {
               title: 'Nothing recorded yet',
               message: 'No universal parts are listed for this model.',
             )
-          : ListView(
-              padding: const EdgeInsets.all(16),
+          : PageBody(
+              child: ListView(
+              padding: EdgeInsets.fromLTRB(
+                  context.pagePadding, 12, context.pagePadding, 24),
               children: [
-                Container(
+                EntranceFade(
+                  child: TiltCard(
+                    maxTilt: 0.09,
+                    child: Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: const [brandSeed, Color(0xFF3E7BFA)],
+                    gradient: const LinearGradient(
+                      colors: [brandSeed, Color(0xFF3E7BFA)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -92,7 +100,7 @@ class ModelScreen extends StatelessWidget {
                       Row(
                         children: [
                           _HeroStat(
-                            value: '${profile.parts.length}',
+                            value: profile.parts.length,
                             label: profile.parts.length == 1
                                 ? 'part list'
                                 : 'part lists',
@@ -104,18 +112,22 @@ class ModelScreen extends StatelessWidget {
                             color: Colors.white24,
                           ),
                           _HeroStat(
-                            value: '${profile.siblings.length}',
+                            value: profile.siblings.length,
                             label: 'related models',
                           ),
                         ],
                       ),
                     ],
                   ),
+                  ),
+                  ),
                 ),
                 Gap.xl,
                 const SectionHeader(title: 'Parts that fit'),
-                for (final part in profile.parts) ...[
-                  Card(
+                for (final (i, part) in profile.parts.indexed) ...[
+                  EntranceFade(
+                    index: i,
+                    child: Card(
                     child: ListTile(
                       leading: Builder(builder: (context) {
                         final tint = accentFor(part.category.icon, scheme);
@@ -146,6 +158,7 @@ class ModelScreen extends StatelessWidget {
                       },
                     ),
                   ),
+                  ),
                   const SizedBox(height: 8),
                 ],
                 if (profile.siblings.isNotEmpty) ...[
@@ -162,10 +175,13 @@ class ModelScreen extends StatelessWidget {
                       for (final sibling in profile.siblings.take(40))
                         ActionChip(
                           label: Text(sibling),
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => ModelScreen(model: sibling)),
-                          ),
+                          onPressed: () {
+                            Haptics.tap();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) => ModelScreen(model: sibling)),
+                            );
+                          },
                         ),
                     ],
                   ),
@@ -173,6 +189,7 @@ class ModelScreen extends StatelessWidget {
                 Gap.xl,
                 const VerifyNotice(),
               ],
+              ),
             ),
     );
   }
@@ -193,7 +210,7 @@ class ModelScreen extends StatelessWidget {
 class _HeroStat extends StatelessWidget {
   const _HeroStat({required this.value, required this.label});
 
-  final String value;
+  final int value;
   final String label;
 
   @override
@@ -201,7 +218,8 @@ class _HeroStat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(value,
+        AnimatedCounter(
+            value: value,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge

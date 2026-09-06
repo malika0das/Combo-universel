@@ -3,9 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../app_scope.dart';
+import '../motion.dart';
+import '../responsive.dart';
 import '../services/search_engine.dart';
 import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/dimensional.dart';
 import '../widgets/ui.dart';
 import 'model_screen.dart';
 
@@ -24,6 +27,10 @@ class _CompareScreenState extends State<CompareScreen> {
   late List<String> _models = [...widget.initialModels];
   final TextEditingController _controller = TextEditingController();
 
+  /// Bumped whenever a comparison newly succeeds, to fire the burst.
+  int _matchToken = 0;
+  bool _wasMatched = false;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -32,7 +39,14 @@ class _CompareScreenState extends State<CompareScreen> {
 
   void _add(String model) {
     if (model.trim().isEmpty) return;
-    if (_models.any((m) => m.toLowerCase() == model.toLowerCase())) return;
+    if (_models.any((m) => m.toLowerCase() == model.toLowerCase())) {
+      Haptics.warn();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$model is already on the list')),
+      );
+      return;
+    }
+    Haptics.confirm();
     setState(() => _models = [..._models, model]);
     _controller.clear();
   }
@@ -45,6 +59,14 @@ class _CompareScreenState extends State<CompareScreen> {
     final profiles =
         engine == null ? <ModelProfile>[] : _models.map(engine.profileFor).toList();
     final shared = _sharedParts(profiles);
+
+    // Fire the celebration only on the transition into a match.
+    final matched = shared.isNotEmpty;
+    if (matched && !_wasMatched) {
+      _matchToken++;
+      WidgetsBinding.instance.addPostFrameCallback((_) => Haptics.confirm());
+    }
+    _wasMatched = matched;
 
     return Scaffold(
       appBar: AppBar(
@@ -65,8 +87,10 @@ class _CompareScreenState extends State<CompareScreen> {
         ],
       ),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      body: PageBody(
+        child: ListView(
+        padding: EdgeInsets.fromLTRB(
+            context.pagePadding, 12, context.pagePadding, 24),
         children: [
           Autocomplete<String>(
             optionsBuilder: (value) {
@@ -96,20 +120,39 @@ class _CompareScreenState extends State<CompareScreen> {
             runSpacing: 4,
             children: [
               for (final m in _models)
-                InputChip(
-                  label: Text(m),
-                  onDeleted: () =>
-                      setState(() => _models = _models.where((x) => x != m).toList()),
+                EntranceFade(
+                  child: InputChip(
+                    label: Text(m),
+                    onDeleted: () {
+                      Haptics.warn();
+                      setState(
+                          () => _models = _models.where((x) => x != m).toList());
+                    },
+                  ),
                 ),
             ],
           ),
           const SizedBox(height: 16),
           if (_models.length < 2)
-            const EmptyState(
-              icon: Icons.compare_arrows_rounded,
-              title: 'Add two models',
-              message: 'See which universal parts cover both — useful before '
-                  'you buy stock.',
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                child: Column(
+                  children: [
+                    CompatibilityGlyph(matched: false, color: scheme.primary),
+                    Gap.lg,
+                    Text('Add two models',
+                        style: Theme.of(context).textTheme.titleMedium),
+                    Gap.sm,
+                    Text(
+                      'See which universal parts cover both — useful before '
+                      'you buy stock.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
             )
           else if (shared.isEmpty)
             Container(
@@ -133,32 +176,52 @@ class _CompareScreenState extends State<CompareScreen> {
               ),
             )
           else ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF17A673), Color(0xFF0E8A5F)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded, color: Colors.white),
-                  Gap.wMd,
-                  Expanded(
-                    child: Text(
-                      'One part covers all ${_models.length} models in '
-                      '${shared.length} ${shared.length == 1 ? "category" : "categories"}.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(color: Colors.white),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF17A673), Color(0xFF0E8A5F)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF17A673).withValues(alpha: 0.28),
+                        blurRadius: 22,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                  child: Column(
+                    children: [
+                      CompatibilityGlyph(matched: true, color: Colors.white),
+                      Gap.md,
+                      Text(
+                        'One part fits all ${_models.length}',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Shared in ${shared.length} '
+                        '${shared.length == 1 ? "category" : "categories"}',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                SuccessBurst(trigger: _matchToken, color: Colors.white),
+              ],
             ),
             Gap.md,
             for (final part in shared)
@@ -195,6 +258,7 @@ class _CompareScreenState extends State<CompareScreen> {
               ),
           ],
         ],
+        ),
       ),
     );
   }

@@ -4,6 +4,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../motion.dart';
+import '../responsive.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/ui.dart';
 import 'group_screen.dart';
@@ -70,14 +72,18 @@ class StockScreen extends StatelessWidget {
                       'Tap the cart icon on any part list to add it here, then '
                       'send the whole order to your supplier in one tap.',
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              : PageBody(
+                  child: ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                      context.pagePadding, 12, context.pagePadding, 24),
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, i) {
                     final (category, brand, group) = items[i];
                     final note = scope.prefs.noteFor(group.code);
-                    return Card(
+                    return EntranceFade(
+                      index: i,
+                      child: Card(
                       child: ListTile(
                         title: Text(group.title),
                         subtitle: Text(
@@ -100,13 +106,18 @@ class StockScreen extends StatelessWidget {
                             IconButton(
                               tooltip: 'Remove',
                               icon: const Icon(Icons.remove_shopping_cart_outlined),
-                              onPressed: () => scope.prefs.toggleStock(group.code),
+                              onPressed: () {
+                                Haptics.warn();
+                                scope.prefs.toggleStock(group.code);
+                              },
                             ),
                           ],
                         ),
                       ),
+                      ),
                     );
                   },
+                  ),
                 ),
         );
       },

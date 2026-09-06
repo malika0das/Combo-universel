@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../motion.dart';
+import '../responsive.dart';
+import '../services/insight_service.dart';
 import '../theme.dart';
+import '../widgets/dimensional.dart';
+import '../widgets/insight_card.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/ui.dart';
 import 'category_screen.dart';
@@ -95,23 +102,47 @@ class _Body extends StatelessWidget {
     final scope = AppScope.of(context);
     final recent = scope.prefs.recent;
     final theme = Theme.of(context);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      children: [
-        _SearchBox(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SearchScreen()),
+    final pad = context.pagePadding;
+
+    final insight = const InsightService().build(
+      prefs: scope.prefs,
+      catalog: catalog,
+      engine: scope.catalog.engine,
+    );
+    final showInsight =
+        insight != null && !scope.prefs.isInsightDismissed(insight.id);
+
+    return PageBody(
+      child: ListView(
+        padding: EdgeInsets.fromLTRB(pad, 4, pad, 28),
+        children: [
+        EntranceFade(index: 0, child: _Greeting(catalog: catalog)),
+        Gap.md,
+        EntranceFade(
+          index: 1,
+          child: _SearchBox(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SearchScreen()),
+            ),
           ),
         ),
+        if (showInsight) ...[
+          Gap.md,
+          InsightCard(
+            insight: insight,
+            onDismiss: () => scope.prefs.dismissInsight(insight.id),
+            onAction: () => _runInsight(context, insight),
+          ),
+        ],
         const SizedBox(height: 16),
         if (recent.isNotEmpty) ...[
-          SectionHeader(
+          EntranceFade(index: 2, child: SectionHeader(
             title: 'Recent searches',
             trailing: TextButton(
               onPressed: scope.prefs.clearRecent,
               child: const Text('Clear'),
             ),
-          ),
+          )),
           Wrap(
             spacing: 8,
             runSpacing: 4,
@@ -128,7 +159,9 @@ class _Body extends StatelessWidget {
           ),
           Gap.lg,
         ],
-        Row(
+        EntranceFade(
+          index: 2,
+          child: Row(
           children: [
             Expanded(
               child: _QuickAction(
@@ -166,6 +199,7 @@ class _Body extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
         Gap.xl,
         SectionHeader(
@@ -176,15 +210,15 @@ class _Body extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: catalog.categories.length,
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 210,
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: context.isWide ? 240 : 210,
             childAspectRatio: 1.18,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
           itemBuilder: (context, i) {
             final c = catalog.categories[i];
-            return _CategoryCard(category: c);
+            return EntranceFade(index: 3 + i, child: _CategoryCard(category: c));
           },
         ),
         Gap.xl,
@@ -195,6 +229,66 @@ class _Body extends StatelessWidget {
             'List v${catalog.version} · updated ${catalog.updatedAt}',
             style: theme.textTheme.labelSmall,
           ),
+        ),
+        ],
+      ),
+    );
+  }
+
+  void _runInsight(BuildContext context, Insight insight) {
+    if (insight.actionModel != null) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ModelScreen(model: insight.actionModel!),
+      ));
+      return;
+    }
+    if (insight.actionQuery != null) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => SearchScreen(initialQuery: insight.actionQuery!),
+      ));
+      return;
+    }
+    switch (insight.id) {
+      case 'order_ready':
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const StockScreen()),
+        );
+      case 'compare_hint':
+        final recent = AppScope.of(context).prefs.recent;
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => CompareScreen(initialModels: recent.take(2).toList()),
+        ));
+    }
+  }
+}
+
+/// Time-aware greeting plus a live count. Small, human, and it makes the app
+/// feel present rather than static.
+class _Greeting extends StatelessWidget {
+  const _Greeting({required this.catalog});
+
+  final Catalog catalog;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final engine = AppScope.of(context).catalog.engine;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          InsightService.greeting(DateTime.now()),
+          style: theme.textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            AnimatedCounter(
+              value: engine?.modelCount ?? 0,
+              style: theme.textTheme.bodySmall,
+            ),
+            Text(' models ready offline', style: theme.textTheme.bodySmall),
+          ],
         ),
       ],
     );
@@ -258,11 +352,11 @@ class _QuickAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
+    return TiltCard(
+      onTap: onTap,
+      maxTilt: 0.16,
+      child: Card(
+        margin: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
           child: Column(
@@ -313,8 +407,8 @@ class _SearchBox extends StatelessWidget {
       child: Material(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+        child: PressableScale(
+          scale: 0.985,
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.fromLTRB(16, 15, 10, 15),
@@ -334,8 +428,7 @@ class _SearchBox extends StatelessWidget {
                 Icon(Icons.search_rounded, size: 21, color: scheme.primary),
                 Gap.wMd,
                 Expanded(
-                  child: Text(
-                    'Search a model, part or code',
+                  child: _RotatingHint(
                     style: theme.textTheme.bodyLarge
                         ?.copyWith(color: scheme.outline),
                   ),
@@ -359,6 +452,68 @@ class _SearchBox extends StatelessWidget {
   }
 }
 
+/// Cycles through example searches so the empty search field teaches the app's
+/// range without a tutorial. Pauses entirely under reduced-motion.
+class _RotatingHint extends StatefulWidget {
+  const _RotatingHint({this.style});
+
+  final TextStyle? style;
+
+  @override
+  State<_RotatingHint> createState() => _RotatingHintState();
+}
+
+class _RotatingHintState extends State<_RotatingHint> {
+  static const _hints = [
+    'Search a model, part or code',
+    'Try "Redmi 9A battery"',
+    'Try "vivo y17 glass"',
+    'Try "BN4A"',
+  ];
+
+  int _i = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted) setState(() => _i = (_i + 1) % _hints.length);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (Motion.reduced(context)) {
+      return Text(_hints.first, style: widget.style, overflow: TextOverflow.ellipsis);
+    }
+    return AnimatedSwitcher(
+      duration: Motion.base,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween(begin: const Offset(0, 0.4), end: Offset.zero)
+              .animate(animation),
+          child: child,
+        ),
+      ),
+      child: Text(
+        _hints[_i],
+        key: ValueKey(_i),
+        style: widget.style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
 class _CategoryCard extends StatelessWidget {
   const _CategoryCard({required this.category});
 
@@ -369,15 +524,14 @@ class _CategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tint = accentFor(category.icon, scheme);
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: () {
-          AppScope.of(context).ads.maybeShowInterstitial();
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => CategoryScreen(category: category),
-          ));
-        },
+    return PressableScale(
+      onTap: () {
+        AppScope.of(context).ads.maybeShowInterstitial();
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => CategoryScreen(category: category),
+        ));
+      },
+      child: Card(
         child: Stack(
           children: [
             // A soft tinted wash keyed to the part type, so the grid reads as

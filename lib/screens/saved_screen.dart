@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../motion.dart';
+import '../responsive.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/ui.dart';
 import 'group_screen.dart';
@@ -39,14 +41,20 @@ class SavedScreen extends StatelessWidget {
                       'Tap the bookmark icon on any list to keep it here for '
                       'quick offline access.',
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  itemCount: saved.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, i) => GroupCard(
-                    group: saved[i].$2,
-                    query: '',
-                    subtitle: saved[i].$1,
+              : PageBody(
+                  child: ListView.separated(
+                    padding: EdgeInsets.fromLTRB(
+                        context.pagePadding, 12, context.pagePadding, 24),
+                    itemCount: saved.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, i) => EntranceFade(
+                      index: i,
+                      child: GroupCard(
+                        group: saved[i].$2,
+                        query: '',
+                        subtitle: saved[i].$1,
+                      ),
+                    ),
                   ),
                 ),
         );

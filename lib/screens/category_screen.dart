@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../motion.dart';
+import '../responsive.dart';
 import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/ui.dart';
@@ -18,8 +20,10 @@ class CategoryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(category.name)),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
-      body: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      body: PageBody(
+        child: ListView.separated(
+        padding: EdgeInsets.fromLTRB(
+            context.pagePadding, 8, context.pagePadding, 24),
         itemCount: category.brands.length + 1,
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, i) {
@@ -32,7 +36,13 @@ class CategoryScreen extends StatelessWidget {
           }
           final brand = category.brands[i - 1];
           final tint = accentFor(category.icon, Theme.of(context).colorScheme);
-          return Card(
+          return EntranceFade(
+            index: i - 1,
+            child: PressableScale(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => BrandScreen(category: category, brand: brand),
+              )),
+              child: Card(
             child: ListTile(
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -49,12 +59,12 @@ class CategoryScreen extends StatelessWidget {
               subtitle: Text(
                   '${brand.groups.length} lists · ${brand.modelCount} models'),
               trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => BrandScreen(category: category, brand: brand),
-              )),
+            ),
+          ),
             ),
           );
         },
+        ),
       ),
     );
   }
