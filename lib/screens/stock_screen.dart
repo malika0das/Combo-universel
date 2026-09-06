@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../app_scope.dart';
 import '../models/catalog.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/ui.dart';
 import 'group_screen.dart';
 
 /// A purchase / stock list the shop builds while browsing, then sends to a
@@ -62,25 +63,15 @@ class StockScreen extends StatelessWidget {
           ),
           bottomNavigationBar: BannerAdSlot(ads: scope.ads),
           body: items.isEmpty
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.shopping_cart_outlined, size: 40),
-                        SizedBox(height: 12),
-                        Text(
-                          'Tap the cart icon on any part list to add it here, '
-                          'then send the whole order to your supplier in one tap.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
+              ? const EmptyState(
+                  icon: Icons.shopping_cart_outlined,
+                  title: 'Your order list is empty',
+                  message:
+                      'Tap the cart icon on any part list to add it here, then '
+                      'send the whole order to your supplier in one tap.',
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, i) {
@@ -88,10 +79,9 @@ class StockScreen extends StatelessWidget {
                     final note = scope.prefs.noteFor(group.code);
                     return Card(
                       child: ListTile(
-                        title: Text(group.title,
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                        title: Text(group.title),
                         subtitle: Text(
-                          '${category.name} • ${brand.name} • ${group.code}'
+                          '${category.name} · ${brand.name} · ${group.code}'
                           '${note.isEmpty ? '' : '\nNote: $note'}',
                         ),
                         isThreeLine: note.isNotEmpty,

@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../app_scope.dart';
+import '../widgets/ui.dart';
 import 'policy_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -29,8 +30,9 @@ class SettingsScreen extends StatelessWidget {
       builder: (context, _) => Scaffold(
         appBar: AppBar(title: const Text('Settings')),
         body: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
+            const SectionHeader(title: 'Appearance'),
             Card(
               child: Column(
                 children: [
@@ -43,7 +45,7 @@ class SettingsScreen extends StatelessWidget {
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.format_size_rounded),
-                    title: const Text('Text size'),
+                    title: Text('Text size · ${(scope.prefs.fontScale * 100).round()}%'),
                     subtitle: Slider(
                       value: scope.prefs.fontScale,
                       min: 0.85,
@@ -68,7 +70,8 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
+            const SectionHeader(title: 'Data & links'),
             Card(
               child: Column(
                 children: [
@@ -122,7 +125,8 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
+            const SectionHeader(title: 'Legal'),
             Card(
               child: Column(
                 children: [
@@ -152,7 +156,7 @@ class SettingsScreen extends StatelessWidget {
                   snap.hasData
                       ? 'Version ${snap.data!.version} (${snap.data!.buildNumber})'
                       : '',
-                  style: TextStyle(color: Theme.of(context).colorScheme.outline),
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ),
             ),

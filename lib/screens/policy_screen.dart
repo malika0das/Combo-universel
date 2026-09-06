@@ -76,12 +76,58 @@ WhatsApp: +91 72057 02493
       appBar: AppBar(
           title: Text(privacy ? 'Privacy policy' : 'Terms & disclaimer')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: SelectableText(
-          privacy ? _privacy : _terms,
-          style: const TextStyle(height: 1.5),
-        ),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        child: _PolicyBody(text: privacy ? _privacy : _terms),
       ),
+    );
+  }
+}
+
+/// Renders the plain-text policy with real typographic hierarchy: the first
+/// line becomes a heading, numbered clauses become bold subheadings, and the
+/// rest flows as readable body copy.
+class _PolicyBody extends StatelessWidget {
+  const _PolicyBody({required this.text});
+
+  final String text;
+
+  static final _clause = RegExp(r'^\d+\.\s');
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final blocks = text.trim().split('\n');
+    final children = <Widget>[];
+
+    for (var i = 0; i < blocks.length; i++) {
+      final line = blocks[i].trim();
+      if (line.isEmpty) {
+        children.add(const SizedBox(height: 12));
+        continue;
+      }
+      if (i == 0) {
+        children.add(SelectableText(line, style: theme.textTheme.headlineSmall));
+        continue;
+      }
+      if (line.startsWith('Last updated')) {
+        children.add(Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(line, style: theme.textTheme.labelSmall),
+        ));
+        continue;
+      }
+      final isHeading = _clause.hasMatch(line);
+      children.add(SelectableText(
+        line,
+        style: isHeading
+            ? theme.textTheme.titleSmall
+            : theme.textTheme.bodyMedium?.copyWith(height: 1.55),
+      ));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
     );
   }
 }

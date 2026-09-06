@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../services/search_engine.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/ui.dart';
 import 'model_screen.dart';
 
 /// A–Z browser over every distinct phone model in the catalog, for when the
@@ -50,16 +51,19 @@ class _ModelsAzScreenState extends State<ModelsAzScreen> {
       ),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
       body: models.isEmpty
-          ? const Center(child: Text('No model matches that filter.'))
+          ? const EmptyState(
+              icon: Icons.search_off_rounded,
+              title: 'No model matches',
+              message: 'Try fewer characters.',
+            )
           : Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('${models.length} models',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.outline)),
+                        style: Theme.of(context).textTheme.labelSmall),
                   ),
                 ),
                 Expanded(
@@ -73,10 +77,25 @@ class _ModelsAzScreenState extends State<ModelsAzScreen> {
                       return ListTile(
                         dense: true,
                         leading: showHeader
-                            ? CircleAvatar(
-                                radius: 14,
-                                child: Text(model[0].toUpperCase(),
-                                    style: const TextStyle(fontSize: 12)),
+                            ? Container(
+                                width: 28,
+                                height: 28,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.10),
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                                child: Text(
+                                  model[0].toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
                               )
                             : const SizedBox(width: 28),
                         title: Text(model),

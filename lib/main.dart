@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'app_scope.dart';
 import 'screens/home_screen.dart';
@@ -12,6 +13,17 @@ import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Fonts are bundled in assets/google_fonts/, so never reach out to the
+  // network for them. Keeps the app fully offline and the Data Safety form
+  // free of a runtime-download caveat.
+  GoogleFonts.config.allowRuntimeFetching = false;
+
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+  ));
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   await SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 

@@ -32,6 +32,38 @@ Offline-first universal compatibility list (combo/display, battery, tempered gla
 
 **Accessibility** — in-app text size slider (85–150%) layered on top of the system setting, plus dark mode. Everything works fully offline.
 
+## Design system
+
+**Typography** — three Google Fonts, each doing one job:
+
+| Family | Role | Why |
+|---|---|---|
+| **Sora** | headings, titles, stats | geometric and confident; gives the app its premium, technical feel |
+| **Inter** | body, lists, labels | engineered for small sizes and dense UI — this app is mostly lists |
+| **JetBrains Mono** | part codes, battery numbers, SKUs | unambiguous `0/O` and `1/l`, which matters when reading `BN4A` off a screen |
+
+The scale in `lib/theme.dart` steps on a ~1.2 ratio with tracking that tightens
+as size grows (`-1.2` at display, `+0.6` at label), which is what separates a
+designed type system from merely resized text. Line heights are set per role:
+1.18 for headings, 1.42 for body.
+
+Fonts are **bundled**, not fetched. `GoogleFonts.config.allowRuntimeFetching`
+is off, so the app never makes a network call for type and works fully offline.
+Run `bash tools/fetch_fonts.sh` once to populate `assets/google_fonts/`.
+
+**Colour** — a deep indigo-blue brand seed with an amber accent for search
+highlights. Each part category carries its own accent (`accentFor`) so the home
+grid reads as five distinct destinations: battery green, glass cyan, board
+violet, cover pink, display blue.
+
+**Shared primitives** (`lib/widgets/ui.dart`) keep every screen consistent:
+`CodeChip` (tap-to-copy monospaced part code), `SoftBadge`, `SectionHeader`,
+`EmptyState` and `VerifyNotice`. Spacing uses the `Gap` scale instead of magic
+numbers.
+
+The Android splash background is themed light/dark to match the app, so there
+is no colour flash on launch.
+
 
 ## Project layout
 ```
@@ -40,6 +72,8 @@ lib/
   app_scope.dart         InheritedWidget dependency holder
   theme.dart             Material 3 theme
   models/catalog.dart    Catalog/Category/Brand/ComboGroup + simple search
+  theme.dart             brand palette, type scale, component themes
+  widgets/ui.dart        CodeChip / SoftBadge / SectionHeader / EmptyState
   services/search_engine.dart  typo-tolerant index, autocomplete, model profiles
   screens/model_screen.dart    every part that fits one phone
   screens/compare_screen.dart  shared-part finder for 2+ phones
@@ -58,6 +92,13 @@ store/                   Play listing, data safety, privacy policy, terms, icon 
 ```
 
 ## Run it
+
+Fetch the bundled fonts once before the first build:
+
+```bash
+bash tools/fetch_fonts.sh
+```
+
 ```bash
 flutter pub get
 flutter run

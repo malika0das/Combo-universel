@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/ui.dart';
 import 'group_screen.dart';
 
 class CategoryScreen extends StatelessWidget {
@@ -17,19 +19,35 @@ class CategoryScreen extends StatelessWidget {
       appBar: AppBar(title: Text(category.name)),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
       body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: category.brands.length,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        itemCount: category.brands.length + 1,
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, i) {
-          final brand = category.brands[i];
+          if (i == 0) {
+            return SectionHeader(
+              title: 'Choose a brand',
+              subtitle: '${category.groupCount} lists · '
+                  '${category.modelCount} models in ${category.name}',
+            );
+          }
+          final brand = category.brands[i - 1];
+          final tint = accentFor(category.icon, Theme.of(context).colorScheme);
           return Card(
             child: ListTile(
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              title: Text(brand.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              leading: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: tint.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(iconFor(category.icon), size: 20, color: tint),
+              ),
+              title: Text(brand.name),
               subtitle: Text(
-                  '${brand.groups.length} lists • ${brand.modelCount} models'),
+                  '${brand.groups.length} lists · ${brand.modelCount} models'),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => BrandScreen(category: category, brand: brand),
@@ -77,9 +95,18 @@ class _BrandScreenState extends State<BrandScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.brand.name),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.brand.name,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(height: 1.1)),
+            Text(widget.category.name,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10)),
+          ],
+        ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(64),
+          preferredSize: const Size.fromHeight(66),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: TextField(
@@ -105,7 +132,11 @@ class _BrandScreenState extends State<BrandScreen> {
       ),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
       body: groups.isEmpty
-          ? const Center(child: Text('No matching list found.'))
+          ? const EmptyState(
+              icon: Icons.search_off_rounded,
+              title: 'No matching list',
+              message: 'Try a shorter keyword, or clear the filter.',
+            )
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: groups.length,

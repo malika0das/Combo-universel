@@ -17,6 +17,7 @@ dependencies:
   share_plus: ^10.0.2
   package_info_plus: ^8.0.2
   connectivity_plus: ^6.0.5
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -27,3 +28,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/catalog.json
+    # Bundled brand fonts (Sora / Inter / JetBrains Mono). Populate with
+    # `bash tools/fetch_fonts.sh` so nothing is fetched at runtime.
+    - assets/google_fonts/

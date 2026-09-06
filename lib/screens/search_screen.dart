@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../models/catalog.dart';
 import '../services/search_engine.dart';
+import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/ui.dart';
 import 'group_screen.dart';
 import 'model_screen.dart';
 
@@ -86,7 +88,7 @@ class _SearchScreenState extends State<SearchScreen> {
               textInputAction: TextInputAction.search,
               onChanged: _onChanged,
               decoration: InputDecoration(
-                hintText: 'Search model, e.g. Redmi 9A',
+                hintText: 'Model, part or code',
                 prefixIcon: const Icon(Icons.search_rounded),
                 isDense: true,
                 suffixIcon: !hasQuery
@@ -160,21 +162,31 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.search_off_rounded, size: 40),
-                        const SizedBox(height: 12),
+                        Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            color: scheme.primary.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.search_off_rounded,
+                              size: 30, color: scheme.primary),
+                        ),
+                        Gap.lg,
                         Text('No match for "${_query.trim()}"',
-                            textAlign: TextAlign.center),
-                        const SizedBox(height: 6),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        Gap.sm,
                         Text(
                           'Try a shorter keyword like "9A" or "Y21".',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: scheme.outline),
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                         if (_result.suggestions.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          const Text('Did you mean',
-                              style: TextStyle(fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 8),
+                          Gap.xl,
+                          Text('Did you mean',
+                              style: Theme.of(context).textTheme.titleSmall),
+                          Gap.sm,
                           Wrap(
                             spacing: 8,
                             alignment: WrapAlignment.center,
@@ -234,10 +246,10 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           const SizedBox(height: 6),
                           Text(
-                            '${_hits.length} matching list(s)'
+                            '${_hits.length} matching list${_hits.length == 1 ? '' : 's'}'
                             '${scopedName == null ? '' : ' in $scopedName'}'
-                            '${_result.fuzzy ? ' • showing close matches' : ''}',
-                            style: TextStyle(color: scheme.outline),
+                            '${_result.fuzzy ? ' · showing close matches' : ''}',
+                            style: Theme.of(context).textTheme.labelSmall,
                           ),
                         ],
                       );
@@ -275,8 +287,7 @@ class _Tips extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         if (recent.isNotEmpty) ...[
-          const Text('Recent', style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
+          const SectionHeader(title: 'Recent'),
           Wrap(
             spacing: 8,
             children: [
@@ -284,10 +295,12 @@ class _Tips extends StatelessWidget {
                 ActionChip(label: Text(q), onPressed: () => onPick(q)),
             ],
           ),
-          const SizedBox(height: 20),
+          Gap.xl,
         ],
-        const Text('Try', style: TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
+        const SectionHeader(
+          title: 'Try a search',
+          subtitle: 'Spelling and spacing do not matter',
+        ),
         Wrap(
           spacing: 8,
           children: [

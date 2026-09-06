@@ -6,6 +6,7 @@ import '../app_scope.dart';
 import '../services/search_engine.dart';
 import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/ui.dart';
 import 'model_screen.dart';
 
 /// "Can I use one part for both phones?" — pick two (or more) models and see
@@ -65,7 +66,7 @@ class _CompareScreenState extends State<CompareScreen> {
       ),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           Autocomplete<String>(
             optionsBuilder: (value) {
@@ -104,50 +105,68 @@ class _CompareScreenState extends State<CompareScreen> {
           ),
           const SizedBox(height: 16),
           if (_models.length < 2)
-            Card(
-              color: scheme.surfaceContainerHighest,
-              child: const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  'Add at least two models to see which universal parts cover '
-                  'both — useful before you buy stock.',
-                ),
-              ),
+            const EmptyState(
+              icon: Icons.compare_arrows_rounded,
+              title: 'Add two models',
+              message: 'See which universal parts cover both — useful before '
+                  'you buy stock.',
             )
           else if (shared.isEmpty)
-            Card(
-              color: scheme.errorContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'No shared universal part found for these models. '
-                  'They need separate parts.',
-                  style: TextStyle(color: scheme.onErrorContainer),
-                ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: scheme.errorContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.link_off_rounded, color: scheme.onErrorContainer),
+                  Gap.wMd,
+                  Expanded(
+                    child: Text(
+                      'No shared universal part. These models need separate parts.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: scheme.onErrorContainer),
+                    ),
+                  ),
+                ],
               ),
             )
           else ...[
-            Card(
-              color: scheme.primaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'One part covers all ${_models.length} models in '
-                  '${shared.length} ${shared.length == 1 ? "category" : "categories"}.',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onPrimaryContainer,
-                  ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF17A673), Color(0xFF0E8A5F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Colors.white),
+                  Gap.wMd,
+                  Expanded(
+                    child: Text(
+                      'One part covers all ${_models.length} models in '
+                      '${shared.length} ${shared.length == 1 ? "category" : "categories"}.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
+            Gap.md,
             for (final part in shared)
               Card(
                 child: ListTile(
-                  leading: Icon(iconFor(part.category.icon)),
-                  title: Text(part.category.name,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  leading: Icon(iconFor(part.category.icon),
+                      color: accentFor(part.category.icon, scheme)),
+                  title: Text(part.category.name),
                   subtitle: Text('${part.group.title}\n${part.group.code}'),
                   isThreeLine: true,
                   trailing: IconButton(
@@ -160,8 +179,7 @@ class _CompareScreenState extends State<CompareScreen> {
           ],
           const SizedBox(height: 16),
           if (_models.isNotEmpty) ...[
-            const Text('Per model', style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
+            const SectionHeader(title: 'Per model'),
             for (final profile in profiles)
               Card(
                 child: ListTile(

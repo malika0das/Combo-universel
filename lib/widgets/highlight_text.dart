@@ -40,6 +40,9 @@ class HighlightText extends StatelessWidget {
           backgroundColor: scheme.tertiaryContainer,
           color: scheme.onTertiaryContainer,
           fontWeight: FontWeight.w700,
+          // A hair of tracking stops the highlighted run from looking cramped
+          // against its background.
+          letterSpacing: 0.15,
         ),
       ));
       start = idx + q.length;

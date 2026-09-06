@@ -6,6 +6,7 @@ import '../app_scope.dart';
 import '../services/search_engine.dart';
 import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/ui.dart';
 import 'group_screen.dart';
 
 /// Everything the catalog knows about one phone: which combo, battery, glass,
@@ -52,59 +53,87 @@ class ModelScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BannerAdSlot(ads: scope.ads),
       body: profile == null || profile.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text(
-                  'No universal parts recorded for this model yet.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
+          ? const EmptyState(
+              icon: Icons.help_outline_rounded,
+              title: 'Nothing recorded yet',
+              message: 'No universal parts are listed for this model.',
             )
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Card(
-                  color: scheme.primaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(profile.model,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onPrimaryContainer,
-                            )),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${profile.parts.length} universal part '
-                          '${profile.parts.length == 1 ? "list" : "lists"} • '
-                          '${profile.siblings.length} related models',
-                          style: TextStyle(color: scheme.onPrimaryContainer),
-                        ),
-                      ],
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: const [brandSeed, Color(0xFF3E7BFA)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('MODEL',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Colors.white70,
+                                fontSize: 9.5,
+                                letterSpacing: 1.4,
+                              )),
+                      const SizedBox(height: 4),
+                      Text(
+                        profile.model,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(color: Colors.white),
+                      ),
+                      Gap.md,
+                      Row(
+                        children: [
+                          _HeroStat(
+                            value: '${profile.parts.length}',
+                            label: profile.parts.length == 1
+                                ? 'part list'
+                                : 'part lists',
+                          ),
+                          Container(
+                            width: 1,
+                            height: 26,
+                            margin: const EdgeInsets.symmetric(horizontal: 18),
+                            color: Colors.white24,
+                          ),
+                          _HeroStat(
+                            value: '${profile.siblings.length}',
+                            label: 'related models',
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                const Text('Parts that fit',
-                    style: TextStyle(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
+                Gap.xl,
+                const SectionHeader(title: 'Parts that fit'),
                 for (final part in profile.parts) ...[
                   Card(
                     child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: scheme.secondaryContainer,
-                        child: Icon(iconFor(part.category.icon),
-                            size: 20, color: scheme.onSecondaryContainer),
-                      ),
-                      title: Text(part.category.name,
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      leading: Builder(builder: (context) {
+                        final tint = accentFor(part.category.icon, scheme);
+                        return Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: tint.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(iconFor(part.category.icon),
+                              size: 19, color: tint),
+                        );
+                      }),
+                      title: Text(part.category.name),
                       subtitle: Text(
                         '${part.group.title}\n'
-                        '${part.group.code} • fits ${part.group.models.length} models',
+                        '${part.group.code} · fits ${part.group.models.length} models',
                       ),
                       isThreeLine: true,
                       trailing: const Icon(Icons.chevron_right_rounded),
@@ -120,10 +149,12 @@ class ModelScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
                 if (profile.siblings.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  const Text('Shares parts with',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 8),
+                  Gap.md,
+                  SectionHeader(
+                    title: 'Shares parts with',
+                    subtitle: '${profile.siblings.length} models use at least '
+                        'one of the same parts',
+                  ),
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
@@ -139,12 +170,8 @@ class ModelScreen extends StatelessWidget {
                     ],
                   ),
                 ],
-                const SizedBox(height: 20),
-                Text(
-                  'Always verify connector type, flex length and frame fit '
-                  'physically before fitting the part.',
-                  style: TextStyle(fontSize: 12, color: scheme.outline),
-                ),
+                Gap.xl,
+                const VerifyNotice(),
               ],
             ),
     );
@@ -160,5 +187,32 @@ class ModelScreen extends StatelessWidget {
     }
     buffer.write('\nvia Combo Universal app');
     return buffer.toString();
+  }
+}
+
+class _HeroStat extends StatelessWidget {
+  const _HeroStat({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(color: Colors.white, height: 1.0)),
+        const SizedBox(height: 2),
+        Text(label,
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(color: Colors.white70, fontSize: 10)),
+      ],
+    );
   }
 }

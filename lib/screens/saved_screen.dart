@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../models/catalog.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/ui.dart';
 import 'group_screen.dart';
 
 class SavedScreen extends StatelessWidget {
@@ -31,24 +32,15 @@ class SavedScreen extends StatelessWidget {
           appBar: AppBar(title: const Text('Saved lists')),
           bottomNavigationBar: BannerAdSlot(ads: scope.ads),
           body: saved.isEmpty
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.bookmark_border_rounded, size: 40),
-                        SizedBox(height: 12),
-                        Text(
-                          'Tap the bookmark icon on any list to keep it here for quick offline access.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
+              ? const EmptyState(
+                  icon: Icons.bookmark_border_rounded,
+                  title: 'Nothing saved yet',
+                  message:
+                      'Tap the bookmark icon on any list to keep it here for '
+                      'quick offline access.',
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   itemCount: saved.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, i) => GroupCard(

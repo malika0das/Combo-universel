@@ -4,8 +4,10 @@ import 'package:share_plus/share_plus.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/highlight_text.dart';
+import '../widgets/ui.dart';
 import 'model_screen.dart';
 
 /// Compact card used in brand and search lists.
@@ -47,8 +49,7 @@ class GroupCard extends StatelessWidget {
                       text: group.title,
                       query: query,
                       maxLines: 2,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 15),
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
                   AnimatedBuilder(
@@ -88,10 +89,27 @@ class GroupCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 2),
-              Text('$subtitle • ${group.quality} • ${group.models.length} models',
-                  style: TextStyle(fontSize: 12, color: scheme.outline)),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      '$subtitle · ${group.quality}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ),
+                  Gap.wSm,
+                  SoftBadge(
+                    label: '${group.models.length}',
+                    icon: Icons.smartphone_rounded,
+                    dense: true,
+                    color: scheme.primary,
+                  ),
+                ],
+              ),
+              Gap.md,
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -101,7 +119,16 @@ class GroupCard extends StatelessWidget {
                   if (group.models.length > preview.length)
                     Chip(
                       visualDensity: VisualDensity.compact,
-                      label: Text('+${group.models.length - preview.length} more'),
+                      backgroundColor: scheme.primary.withValues(alpha: 0.08),
+                      side: BorderSide.none,
+                      label: Text(
+                        '+${group.models.length - preview.length}',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: scheme.primary,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -123,7 +150,12 @@ class _ModelChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Chip(
       visualDensity: VisualDensity.compact,
-      label: HighlightText(text: model, query: query, style: const TextStyle(fontSize: 12)),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      label: HighlightText(
+        text: model,
+        query: query,
+        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500),
+      ),
     );
   }
 }
@@ -216,35 +248,47 @@ class GroupScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(group.title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 6),
+          Text(group.title, style: Theme.of(context).textTheme.headlineSmall),
+          Gap.md,
           Wrap(
             spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Chip(label: Text(group.code)),
-              if (group.quality.isNotEmpty) Chip(label: Text(group.quality)),
-              Chip(label: Text('${group.models.length} models')),
+              CodeChip(code: group.code),
+              if (group.quality.isNotEmpty)
+                SoftBadge(label: group.quality, color: scheme.primary),
+              SoftBadge(
+                label: '${group.models.length} models',
+                icon: Icons.smartphone_rounded,
+                color: scheme.tertiary,
+              ),
             ],
           ),
           if (group.note.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Card(
-              color: scheme.tertiaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.lightbulb_outline_rounded,
-                        size: 20, color: scheme.onTertiaryContainer),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(group.note,
-                          style: TextStyle(color: scheme.onTertiaryContainer)),
+            Container(
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: scheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.lightbulb_outline_rounded,
+                      size: 18, color: scheme.onTertiaryContainer),
+                  Gap.wSm,
+                  Expanded(
+                    child: Text(
+                      group.note,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: scheme.onTertiaryContainer),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -263,21 +307,26 @@ class GroupScreen extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 16),
-          const Text('Compatible models',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
+          Gap.xl,
+          const SectionHeader(
+            title: 'Compatible models',
+            subtitle: 'Tap a model to see every part that fits it',
+          ),
           Card(
             child: Column(
               children: [
                 for (var i = 0; i < group.models.length; i++) ...[
                   ListTile(
                     dense: true,
-                    leading: CircleAvatar(
-                      radius: 14,
-                      backgroundColor: scheme.surfaceContainerHighest,
-                      child: Text('${i + 1}',
-                          style: const TextStyle(fontSize: 11)),
+                    leading: Container(
+                      width: 26,
+                      height: 26,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('${i + 1}', style: AppFonts.code(context, size: 10.5)),
                     ),
                     title: HighlightText(text: group.models[i], query: query),
                     onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -302,11 +351,8 @@ class GroupScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Always verify connector type, flex length and frame fit physically before fitting the part.',
-            style: TextStyle(fontSize: 12, color: scheme.outline),
-          ),
+          Gap.lg,
+          const VerifyNotice(),
         ],
       ),
     );

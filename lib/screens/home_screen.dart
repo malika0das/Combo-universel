@@ -4,6 +4,7 @@ import '../app_scope.dart';
 import '../models/catalog.dart';
 import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
+import '../widgets/ui.dart';
 import 'category_screen.dart';
 import 'compare_screen.dart';
 import 'models_az_screen.dart';
@@ -24,7 +25,7 @@ class HomeScreen extends StatelessWidget {
         final catalog = scope.catalog.catalog;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Combo Universal'),
+            title: const _BrandTitle(),
             actions: [
               AnimatedBuilder(
                 animation: scope.prefs,
@@ -104,15 +105,12 @@ class _Body extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         if (recent.isNotEmpty) ...[
-          Row(
-            children: [
-              Text('Recent searches', style: theme.textTheme.titleSmall),
-              const Spacer(),
-              TextButton(
-                onPressed: scope.prefs.clearRecent,
-                child: const Text('Clear'),
-              ),
-            ],
+          SectionHeader(
+            title: 'Recent searches',
+            trailing: TextButton(
+              onPressed: scope.prefs.clearRecent,
+              child: const Text('Clear'),
+            ),
           ),
           Wrap(
             spacing: 8,
@@ -128,14 +126,16 @@ class _Body extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          Gap.lg,
         ],
         Row(
           children: [
             Expanded(
               child: _QuickAction(
                 icon: Icons.compare_arrows_rounded,
-                label: 'Compare\nmodels',
+                label: 'Compare',
+                caption: 'one part, two phones',
+                tint: const Color(0xFF9B5DE5),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const CompareScreen()),
                 ),
@@ -145,7 +145,9 @@ class _Body extends StatelessWidget {
             Expanded(
               child: _QuickAction(
                 icon: Icons.sort_by_alpha_rounded,
-                label: 'Browse\nA\u2013Z',
+                label: 'A\u2013Z',
+                caption: 'all models',
+                tint: const Color(0xFF00A3C4),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const ModelsAzScreen()),
                 ),
@@ -155,7 +157,9 @@ class _Body extends StatelessWidget {
             Expanded(
               child: _QuickAction(
                 icon: Icons.shopping_cart_outlined,
-                label: 'Order\nlist',
+                label: 'Order',
+                caption: 'send to supplier',
+                tint: const Color(0xFF17A673),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const StockScreen()),
                 ),
@@ -163,26 +167,18 @@ class _Body extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Text('Categories', style: theme.textTheme.titleMedium),
-            const Spacer(),
-            Text(
-              '${scope.catalog.engine?.modelCount ?? 0} models indexed',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.outline),
-            ),
-          ],
+        Gap.xl,
+        SectionHeader(
+          title: 'Browse by part',
+          subtitle: '${scope.catalog.engine?.modelCount ?? 0} models indexed',
         ),
-        const SizedBox(height: 8),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: catalog.categories.length,
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 220,
-            childAspectRatio: 1.35,
+            maxCrossAxisExtent: 210,
+            childAspectRatio: 1.18,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
@@ -191,33 +187,53 @@ class _Body extends StatelessWidget {
             return _CategoryCard(category: c);
           },
         ),
-        const SizedBox(height: 20),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    catalog.notice,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
+        Gap.xl,
+        VerifyNotice(text: catalog.notice),
+        Gap.md,
         Center(
           child: Text(
-            'List version ${catalog.version} • updated ${catalog.updatedAt}',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.outline),
+            'List v${catalog.version} · updated ${catalog.updatedAt}',
+            style: theme.textTheme.labelSmall,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BrandTitle extends StatelessWidget {
+  const _BrandTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [brandSeed, Color(0xFF3E7BFA)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: const Icon(Icons.hub_rounded, size: 17, color: Colors.white),
+        ),
+        Gap.wSm,
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Combo Universal',
+                style: theme.textTheme.titleMedium?.copyWith(height: 1.05)),
+            Text('Spare parts compatibility',
+                style: theme.textTheme.labelSmall
+                    ?.copyWith(fontSize: 9.5, letterSpacing: 0.7)),
+          ],
         ),
       ],
     );
@@ -228,36 +244,51 @@ class _QuickAction extends StatelessWidget {
   const _QuickAction({
     required this.icon,
     required this.label,
+    required this.caption,
+    required this.tint,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final String caption;
+  final Color tint;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Card(
       margin: EdgeInsets.zero,
-      color: scheme.secondaryContainer,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: scheme.onSecondaryContainer),
-              const SizedBox(height: 6),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: tint.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 18, color: tint),
+              ),
+              Gap.sm,
+              Text(label,
+                  style: theme.textTheme.titleSmall?.copyWith(fontSize: 13.5)),
+              const SizedBox(height: 1),
               Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.2,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onSecondaryContainer,
+                caption,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 9.5,
+                  letterSpacing: 0.1,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -275,30 +306,49 @@ class _SearchBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Hero(
       tag: 'searchbox',
       child: Material(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.fromLTRB(16, 15, 10, 15),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(color: scheme.outlineVariant),
+              boxShadow: [
+                BoxShadow(
+                  color: brandSeed.withValues(alpha: 0.06),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                Icon(Icons.search_rounded, color: scheme.primary),
-                const SizedBox(width: 12),
+                Icon(Icons.search_rounded, size: 21, color: scheme.primary),
+                Gap.wMd,
                 Expanded(
                   child: Text(
-                    'Search model, part or code — e.g. Redmi 9A battery',
-                    style: TextStyle(color: scheme.outline),
+                    'Search a model, part or code',
+                    style: theme.textTheme.bodyLarge
+                        ?.copyWith(color: scheme.outline),
                   ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Text('Tap',
+                      style: theme.textTheme.labelSmall?.copyWith(fontSize: 9.5)),
                 ),
               ],
             ),
@@ -316,44 +366,70 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tint = accentFor(category.icon, scheme);
     return Card(
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         onTap: () {
           AppScope.of(context).ads.maybeShowInterstitial();
           Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => CategoryScreen(category: category),
           ));
         },
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: scheme.primaryContainer,
-                child: Icon(iconFor(category.icon),
-                    color: scheme.onPrimaryContainer, size: 22),
+        child: Stack(
+          children: [
+            // A soft tinted wash keyed to the part type, so the grid reads as
+            // five distinct destinations rather than five identical boxes.
+            Positioned(
+              right: -26,
+              top: -26,
+              child: Container(
+                width: 84,
+                height: 84,
+                decoration: BoxDecoration(
+                  color: tint.withValues(alpha: 0.07),
+                  shape: BoxShape.circle,
+                ),
               ),
-              Column(
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    category.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: tint.withValues(alpha: 0.13),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(iconFor(category.icon), color: tint, size: 20),
                   ),
-                  const SizedBox(height: 2),
-                  Text('${category.groupCount} lists • ${category.modelCount} models',
-                      style: TextStyle(fontSize: 12, color: scheme.outline)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontSize: 13.5, height: 1.25),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${category.groupCount} lists · ${category.modelCount} models',
+                        style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -367,16 +443,14 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.cloud_off_rounded, size: 40),
-          const SizedBox(height: 12),
-          const Text('Could not load the list.'),
-          const SizedBox(height: 12),
-          FilledButton(onPressed: onRetry, child: const Text('Retry')),
-        ],
+    return EmptyState(
+      icon: Icons.cloud_off_rounded,
+      title: 'Could not load the list',
+      message: 'The bundled data could not be read. Try again.',
+      action: FilledButton.icon(
+        onPressed: onRetry,
+        icon: const Icon(Icons.refresh_rounded, size: 18),
+        label: const Text('Retry'),
       ),
     );
   }
