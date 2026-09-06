@@ -41,6 +41,19 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: scope.prefs.setDark,
                   ),
                   const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.format_size_rounded),
+                    title: const Text('Text size'),
+                    subtitle: Slider(
+                      value: scope.prefs.fontScale,
+                      min: 0.85,
+                      max: 1.5,
+                      divisions: 13,
+                      label: '${(scope.prefs.fontScale * 100).round()}%',
+                      onChanged: scope.prefs.setFontScale,
+                    ),
+                  ),
+                  const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('Personalised ads'),
                     subtitle: const Text(

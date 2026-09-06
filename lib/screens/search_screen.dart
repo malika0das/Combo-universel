@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../models/catalog.dart';
+import '../services/search_engine.dart';
 import '../widgets/banner_ad_slot.dart';
 import 'group_screen.dart';
+import 'model_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key, this.initialQuery = ''});
@@ -22,7 +24,11 @@ class _SearchScreenState extends State<SearchScreen> {
   Timer? _debounce;
   String _query = '';
   String? _categoryId;
-  List<SearchHit> _hits = const [];
+  SearchResult _result = const SearchResult(
+      hits: [], suggestions: [], scopedCategoryId: null, fuzzy: false);
+  List<String> _completions = const [];
+
+  List<SearchHit> get _hits => _result.hits;
 
   @override
   void initState() {
@@ -41,16 +47,24 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onChanged(String value) {
-    setState(() => _query = value);
+    final engine = AppScope.of(context).catalog.engine;
+    setState(() {
+      _query = value;
+      _completions = engine?.complete(value, limit: 6) ?? const [];
+    });
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 220), () => _run(value));
+    _debounce = Timer(const Duration(milliseconds: 180), () => _run(value));
   }
 
   void _run(String value) {
-    final catalog = AppScope.of(context).catalog.catalog;
-    setState(() => _hits = catalog?.search(value, categoryId: _categoryId) ?? const []);
-    if (value.trim().length >= 3 && _hits.isNotEmpty) {
-      AppScope.of(context).prefs.addRecent(value.trim());
+    final scope = AppScope.of(context);
+    final engine = scope.catalog.engine;
+    final result = engine?.search(value, categoryId: _categoryId) ??
+        const SearchResult(
+            hits: [], suggestions: [], scopedCategoryId: null, fuzzy: false);
+    setState(() => _result = result);
+    if (value.trim().length >= 3 && result.hits.isNotEmpty) {
+      scope.prefs.addRecent(value.trim());
     }
   }
 
@@ -126,13 +140,14 @@ class _SearchScreenState extends State<SearchScreen> {
                 ],
               ),
             ),
-          Expanded(child: _buildResults(context, hasQuery, scheme)),
+          Expanded(child: _buildResults(context, hasQuery, scheme, categories)),
         ],
       ),
     );
   }
 
-  Widget _buildResults(BuildContext context, bool hasQuery, ColorScheme scheme) {
+  Widget _buildResults(BuildContext context, bool hasQuery, ColorScheme scheme,
+      List<Category> categories) {
     return !hasQuery
           ? _Tips(onPick: (q) {
               _controller.text = q;
@@ -155,6 +170,26 @@ class _SearchScreenState extends State<SearchScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(color: scheme.outline),
                         ),
+                        if (_result.suggestions.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          const Text('Did you mean',
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              for (final s in _result.suggestions)
+                                ActionChip(
+                                  label: Text(s),
+                                  onPressed: () {
+                                    _controller.text = s;
+                                    _onChanged(s);
+                                  },
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -165,8 +200,47 @@ class _SearchScreenState extends State<SearchScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, i) {
                     if (i == 0) {
-                      return Text('${_hits.length} matching list(s)',
-                          style: TextStyle(color: scheme.outline));
+                      String? scopedName;
+                      final scopedId = _result.scopedCategoryId;
+                      if (scopedId != null) {
+                        for (final c in categories) {
+                          if (c.id == scopedId) scopedName = c.name;
+                        }
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_completions.isNotEmpty)
+                            SizedBox(
+                              height: 40,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  for (final c in _completions)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 6),
+                                      child: ActionChip(
+                                        avatar: const Icon(
+                                            Icons.phone_iphone_rounded, size: 16),
+                                        label: Text(c),
+                                        onPressed: () => Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (_) => ModelScreen(model: c)),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${_hits.length} matching list(s)'
+                            '${scopedName == null ? '' : ' in $scopedName'}'
+                            '${_result.fuzzy ? ' • showing close matches' : ''}',
+                            style: TextStyle(color: scheme.outline),
+                          ),
+                        ],
+                      );
                     }
                     final hit = _hits[i - 1];
                     return GroupCard(
@@ -184,7 +258,15 @@ class _Tips extends StatelessWidget {
 
   final ValueChanged<String> onPick;
 
-  static const _samples = ['Redmi 9A', 'Y21', 'A10', 'Realme C11', 'Note 8'];
+  static const _samples = [
+    'Redmi 9A',
+    'Y21',
+    'A10',
+    'Realme C11',
+    'rn9pro',
+    'Redmi 9A battery',
+    'Vivo Y17 glass',
+  ];
 
   @override
   Widget build(BuildContext context) {

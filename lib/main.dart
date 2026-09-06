@@ -54,6 +54,19 @@ class ComboUniversalApp extends StatelessWidget {
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),
           themeMode: prefs.dark ? ThemeMode.dark : ThemeMode.light,
+          builder: (context, child) {
+            final media = MediaQuery.of(context);
+            return MediaQuery(
+              // Respect the user's own accessibility setting, then apply the
+              // in-app text-size preference on top of it.
+              data: media.copyWith(
+                textScaler: TextScaler.linear(
+                  media.textScaler.scale(1.0) * prefs.fontScale,
+                ),
+              ),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           home: const HomeScreen(),
         ),
       ),

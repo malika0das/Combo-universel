@@ -1,0 +1,439 @@
+import '../models/catalog.dart';
+
+/// Fast, typo-tolerant search over the whole catalog.
+///
+/// Built once per catalog load and reused, so typing stays smooth even with
+/// thousands of models. It understands the shorthand technicians actually
+/// type at the counter: "rn9pro", "note 8", "mi a2", "y21s", "a10s combo".
+class SearchEngine {
+  SearchEngine(this.catalog) {
+    _build();
+  }
+
+  final Catalog catalog;
+
+  final List<_Entry> _entries = <_Entry>[];
+  final Map<String, _ModelRef> _models = <String, _ModelRef>{};
+
+  /// Brand shorthand and common misspellings mapped to what the data uses.
+  static const Map<String, String> aliases = <String, String>{
+    'rn': 'redmi note',
+    'mi': 'xiaomi',
+    'note': 'note',
+    'sam': 'samsung',
+    'sammy': 'samsung',
+    'samsang': 'samsung',
+    'samsun': 'samsung',
+    'vivi': 'vivo',
+    'vivp': 'vivo',
+    'opo': 'oppo',
+    'oppa': 'oppo',
+    'realmi': 'realme',
+    'realmy': 'realme',
+    'rilme': 'realme',
+    'op': 'oneplus',
+    '1+': 'oneplus',
+    'one plus': 'oneplus',
+    'redmy': 'redmi',
+    'radmi': 'redmi',
+    'ridmi': 'redmi',
+    'infinx': 'infinix',
+    'tecno': 'tecno',
+    'techno': 'tecno',
+    'moto': 'motorola',
+    'honour': 'honor',
+    'iphon': 'iphone',
+    'i phone': 'iphone',
+    'apple': 'iphone',
+    'poko': 'poco',
+    'pocco': 'poco',
+  };
+
+  /// Words that describe a part rather than a phone, used to auto-scope a
+  /// query like "redmi 9a battery" to the Battery category.
+  static const Map<String, String> categoryHints = <String, String>{
+    'combo': 'combo',
+    'folder': 'combo',
+    'display': 'combo',
+    'lcd': 'combo',
+    'screen': 'combo',
+    'battery': 'battery',
+    'batery': 'battery',
+    'cell': 'battery',
+    'mah': 'battery',
+    'glass': 'tempered',
+    'tempered': 'tempered',
+    'guard': 'tempered',
+    'protector': 'tempered',
+    'uv': 'tempered',
+    'curved': 'tempered',
+    'board': 'ccboard',
+    'cc': 'ccboard',
+    'sub': 'ccboard',
+    'charging': 'ccboard',
+    'cover': 'case',
+    'case': 'case',
+    'back': 'case',
+    'pouch': 'case',
+  };
+
+  void _build() {
+    for (final category in catalog.categories) {
+      for (final brand in category.brands) {
+        for (final group in brand.groups) {
+          for (final model in group.models) {
+            final normal = normalize(model);
+            _entries.add(_Entry(
+              category: category,
+              brand: brand,
+              group: group,
+              model: model,
+              normal: normal,
+              compact: compact(normal),
+            ));
+            _models.putIfAbsent(normal, () => _ModelRef(model, normal));
+          }
+        }
+      }
+    }
+  }
+
+  /// Every distinct model name in the catalog, sorted for the A–Z browser.
+  late final List<String> allModels = (_models.values.map((e) => e.display).toList()
+    ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())));
+
+  int get modelCount => _models.length;
+  int get entryCount => _entries.length;
+
+  static String normalize(String input) {
+    final buffer = StringBuffer();
+    var lastWasSpace = true;
+    for (final rune in input.toLowerCase().runes) {
+      final ch = String.fromCharCode(rune);
+      final isWord = (rune >= 97 && rune <= 122) || (rune >= 48 && rune <= 57);
+      if (isWord) {
+        buffer.write(ch);
+        lastWasSpace = false;
+      } else if (!lastWasSpace) {
+        buffer.write(' ');
+        lastWasSpace = true;
+      }
+    }
+    return buffer.toString().trim();
+  }
+
+  static String compact(String normalized) => normalized.replaceAll(' ', '');
+
+  /// Splits digits from letters so "note8" also matches "note 8", and expands
+  /// brand shorthand.
+  static List<String> tokenize(String normalized) {
+    final tokens = <String>[];
+    for (final raw in normalized.split(' ')) {
+      if (raw.isEmpty) continue;
+      final expanded = aliases[raw] ?? raw;
+      for (final part in expanded.split(' ')) {
+        if (part.isEmpty) continue;
+        // Split a mixed token like "9a5000" into "9a" only when it is clearly
+        // "word+number", e.g. "note8" -> "note", "8".
+        final match = RegExp(r'^([a-z]+)(\d.*)$').firstMatch(part);
+        if (match != null && match.group(1)!.length > 2) {
+          tokens.add(match.group(1)!);
+          tokens.add(match.group(2)!);
+        } else {
+          tokens.add(part);
+        }
+      }
+    }
+    return tokens;
+  }
+
+  /// Levenshtein distance with an early exit, used only for short tokens.
+  static int editDistance(String a, String b, {int max = 1}) {
+    if ((a.length - b.length).abs() > max) return max + 1;
+    var previous = List<int>.generate(b.length + 1, (i) => i);
+    for (var i = 1; i <= a.length; i++) {
+      final current = List<int>.filled(b.length + 1, 0);
+      current[0] = i;
+      var rowMin = i;
+      for (var j = 1; j <= b.length; j++) {
+        final cost = a.codeUnitAt(i - 1) == b.codeUnitAt(j - 1) ? 0 : 1;
+        final value = [
+          current[j - 1] + 1,
+          previous[j] + 1,
+          previous[j - 1] + cost,
+        ].reduce((x, y) => x < y ? x : y);
+        current[j] = value;
+        if (value < rowMin) rowMin = value;
+      }
+      if (rowMin > max) return max + 1;
+      previous = current;
+    }
+    return previous[b.length];
+  }
+
+  /// Reads a part keyword out of the query ("redmi 9a battery" -> 'battery').
+  String? detectCategory(String rawQuery) {
+    for (final token in tokenize(normalize(rawQuery))) {
+      final hit = categoryHints[token];
+      if (hit != null && catalog.categories.any((c) => c.id == hit)) return hit;
+    }
+    return null;
+  }
+
+  /// Main entry point. [categoryId] null means "all categories"; when
+  /// [autoScope] is true a part keyword inside the query narrows it down.
+  SearchResult search(
+    String rawQuery, {
+    String? categoryId,
+    bool autoScope = true,
+    int limit = 300,
+  }) {
+    final normal = normalize(rawQuery);
+    if (normal.isEmpty) {
+      return const SearchResult(hits: [], suggestions: [], scopedCategoryId: null, fuzzy: false);
+    }
+
+    var scope = categoryId;
+    if (scope == null && autoScope) scope = detectCategory(rawQuery);
+
+    final queryTokens = tokenize(normal)
+        .where((t) => categoryHints[t] == null || t.length <= 2)
+        .toList();
+    final effectiveTokens = queryTokens.isEmpty ? tokenize(normal) : queryTokens;
+    final queryCompact = compact(effectiveTokens.join(' '));
+
+    final byGroup = <String, _Accumulator>{};
+    var usedFuzzy = false;
+
+    for (var pass = 0; pass < 2; pass++) {
+      final allowFuzzy = pass == 1;
+      for (final entry in _entries) {
+        if (scope != null && entry.category.id != scope) continue;
+        final score = _score(entry, normal, queryCompact, effectiveTokens,
+            allowFuzzy: allowFuzzy);
+        if (score <= 0) continue;
+        if (allowFuzzy) usedFuzzy = true;
+        final acc = byGroup.putIfAbsent(
+          '${entry.category.id}/${entry.group.code}',
+          () => _Accumulator(entry.category, entry.brand, entry.group),
+        );
+        acc.add(entry.model, score);
+      }
+      if (byGroup.isNotEmpty) break;
+    }
+
+    // Also allow matching by group code or battery title ("BN4A", "EB-BA546").
+    if (byGroup.isEmpty) {
+      for (final category in catalog.categories) {
+        if (scope != null && category.id != scope) continue;
+        for (final brand in category.brands) {
+          for (final group in brand.groups) {
+            final hay = normalize('${group.code} ${group.title}');
+            if (!hay.contains(normal) && !compact(hay).contains(queryCompact)) {
+              continue;
+            }
+            byGroup
+                .putIfAbsent('${category.id}/${group.code}',
+                    () => _Accumulator(category, brand, group))
+                .score += 400;
+          }
+        }
+      }
+    }
+
+    final hits = byGroup.values
+        .map((a) => SearchHit(
+              category: a.category,
+              brand: a.brand,
+              group: a.group,
+              matchedModels: a.matched,
+              exact: a.exact,
+              score: a.score,
+            ))
+        .toList()
+      ..sort((a, b) {
+        if (a.exact != b.exact) return a.exact ? -1 : 1;
+        final byScore = b.score.compareTo(a.score);
+        if (byScore != 0) return byScore;
+        final byCount = b.matchedModels.length.compareTo(a.matchedModels.length);
+        if (byCount != 0) return byCount;
+        return a.group.code.compareTo(b.group.code);
+      });
+
+    return SearchResult(
+      hits: hits.length > limit ? hits.sublist(0, limit) : hits,
+      suggestions: hits.isEmpty ? suggest(rawQuery) : const [],
+      scopedCategoryId: scope,
+      fuzzy: usedFuzzy,
+    );
+  }
+
+  int _score(
+    _Entry entry,
+    String normalQuery,
+    String queryCompact,
+    List<String> tokens, {
+    required bool allowFuzzy,
+  }) {
+    if (entry.normal == normalQuery) return 1000;
+    if (entry.compact == queryCompact) return 900;
+    if (entry.compact.startsWith(queryCompact)) return 750;
+    if (entry.compact.contains(queryCompact)) return 600;
+    if (entry.normal.contains(normalQuery)) return 550;
+
+    var matched = 0;
+    for (final token in tokens) {
+      if (entry.compact.contains(token)) {
+        matched++;
+      } else if (allowFuzzy && token.length >= 4) {
+        final near = entry.normal
+            .split(' ')
+            .any((word) => editDistance(word, token) <= 1);
+        if (near) matched++;
+      }
+    }
+    if (matched == tokens.length && tokens.isNotEmpty) {
+      return allowFuzzy ? 200 : 350;
+    }
+    return 0;
+  }
+
+  /// "Did you mean" list for a query that found nothing.
+  List<String> suggest(String rawQuery, {int limit = 6}) {
+    final normal = normalize(rawQuery);
+    if (normal.length < 3) return const [];
+    final scored = <MapEntry<String, int>>[];
+    for (final ref in _models.values) {
+      final distance = editDistance(ref.normal, normal, max: 3);
+      if (distance <= 3) scored.add(MapEntry(ref.display, distance));
+    }
+    scored.sort((a, b) => a.value.compareTo(b.value));
+    return scored.take(limit).map((e) => e.key).toList();
+  }
+
+  /// Autocomplete for the search box, prioritising prefix matches.
+  List<String> complete(String rawQuery, {int limit = 8}) {
+    final normal = normalize(rawQuery);
+    if (normal.isEmpty) return const [];
+    final target = compact(normal);
+    final starts = <String>[];
+    final contains = <String>[];
+    for (final ref in _models.values) {
+      final c = compact(ref.normal);
+      if (c.startsWith(target)) {
+        starts.add(ref.display);
+      } else if (contains.length < limit * 3 && c.contains(target)) {
+        contains.add(ref.display);
+      }
+      if (starts.length >= limit * 3) break;
+    }
+    starts.sort((a, b) => a.length.compareTo(b.length));
+    contains.sort((a, b) => a.length.compareTo(b.length));
+    return <String>[...starts, ...contains].take(limit).toList();
+  }
+
+  /// Every part, in every category, that fits one specific model.
+  ModelProfile profileFor(String model) {
+    final normal = normalize(model);
+    final parts = <ModelPart>[];
+    final siblings = <String, String>{};
+    for (final entry in _entries) {
+      if (entry.normal != normal) continue;
+      parts.add(ModelPart(entry.category, entry.brand, entry.group));
+      for (final other in entry.group.models) {
+        final key = normalize(other);
+        if (key != normal) siblings.putIfAbsent(key, () => other);
+      }
+    }
+    parts.sort((a, b) => a.category.name.compareTo(b.category.name));
+    final display = _models[normal]?.display ?? model;
+    final siblingList = siblings.values.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return ModelProfile(model: display, parts: parts, siblings: siblingList);
+  }
+
+  bool hasModel(String model) => _models.containsKey(normalize(model));
+}
+
+class _Entry {
+  _Entry({
+    required this.category,
+    required this.brand,
+    required this.group,
+    required this.model,
+    required this.normal,
+    required this.compact,
+  });
+
+  final Category category;
+  final Brand brand;
+  final ComboGroup group;
+  final String model;
+  final String normal;
+  final String compact;
+}
+
+class _ModelRef {
+  _ModelRef(this.display, this.normal);
+
+  final String display;
+  final String normal;
+}
+
+class _Accumulator {
+  _Accumulator(this.category, this.brand, this.group);
+
+  final Category category;
+  final Brand brand;
+  final ComboGroup group;
+  final List<String> matched = <String>[];
+  int score = 0;
+  bool exact = false;
+
+  void add(String model, int modelScore) {
+    matched.add(model);
+    if (modelScore >= 900) exact = true;
+    if (modelScore > score) score = modelScore;
+    score += 5; // a group covering more matches ranks slightly higher
+  }
+}
+
+class SearchResult {
+  const SearchResult({
+    required this.hits,
+    required this.suggestions,
+    required this.scopedCategoryId,
+    required this.fuzzy,
+  });
+
+  final List<SearchHit> hits;
+  final List<String> suggestions;
+  final String? scopedCategoryId;
+  final bool fuzzy;
+
+  bool get isEmpty => hits.isEmpty;
+}
+
+class ModelPart {
+  const ModelPart(this.category, this.brand, this.group);
+
+  final Category category;
+  final Brand brand;
+  final ComboGroup group;
+}
+
+class ModelProfile {
+  const ModelProfile({
+    required this.model,
+    required this.parts,
+    required this.siblings,
+  });
+
+  final String model;
+  final List<ModelPart> parts;
+
+  /// Other models that share at least one part with this one.
+  final List<String> siblings;
+
+  bool get isEmpty => parts.isEmpty;
+}

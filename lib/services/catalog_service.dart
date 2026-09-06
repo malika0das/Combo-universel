@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/catalog.dart';
+import 'search_engine.dart';
 
 /// Loads the catalog with a hybrid strategy:
 /// 1. bundled asset (instant, always works offline)
@@ -24,12 +25,16 @@ class CatalogService extends ChangeNotifier {
   final http.Client _client;
 
   Catalog? _catalog;
+  SearchEngine? _engine;
   bool _loading = true;
   bool _refreshing = false;
   String? _error;
   String _source = 'bundled';
 
   Catalog? get catalog => _catalog;
+
+  /// Typo-tolerant search index, rebuilt whenever the catalog changes.
+  SearchEngine? get engine => _engine;
   bool get loading => _loading;
   bool get refreshing => _refreshing;
   String? get error => _error;
@@ -43,6 +48,7 @@ class CatalogService extends ChangeNotifier {
       final cached = await _loadCached();
       _catalog = (cached != null && cached.version > bundled.version) ? cached : bundled;
       _source = identical(_catalog, cached) ? 'cached update' : 'bundled';
+      _engine = _catalog == null ? null : SearchEngine(_catalog!);
       _error = null;
     } catch (e) {
       _error = 'Could not load list data.';
@@ -84,6 +90,7 @@ class CatalogService extends ChangeNotifier {
             jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>);
         if (_catalog == null || remote.version > _catalog!.version) {
           _catalog = remote;
+          _engine = SearchEngine(remote);
           _source = 'online update';
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_cacheKey, utf8.decode(res.bodyBytes));

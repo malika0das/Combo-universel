@@ -5,9 +5,12 @@ import '../models/catalog.dart';
 import '../theme.dart';
 import '../widgets/banner_ad_slot.dart';
 import 'category_screen.dart';
+import 'compare_screen.dart';
+import 'models_az_screen.dart';
 import 'saved_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
+import 'stock_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -23,6 +26,23 @@ class HomeScreen extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Combo Universal'),
             actions: [
+              AnimatedBuilder(
+                animation: scope.prefs,
+                builder: (context, _) {
+                  final count = scope.prefs.stock.length;
+                  return IconButton(
+                    tooltip: 'Order list',
+                    icon: Badge(
+                      isLabelVisible: count > 0,
+                      label: Text('$count'),
+                      child: const Icon(Icons.shopping_cart_outlined),
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const StockScreen()),
+                    ),
+                  );
+                },
+              ),
               IconButton(
                 tooltip: 'Saved lists',
                 icon: const Icon(Icons.bookmark_border_rounded),
@@ -110,7 +130,51 @@ class _Body extends StatelessWidget {
           ),
           const SizedBox(height: 16),
         ],
-        Text('Categories', style: theme.textTheme.titleMedium),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickAction(
+                icon: Icons.compare_arrows_rounded,
+                label: 'Compare\nmodels',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CompareScreen()),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickAction(
+                icon: Icons.sort_by_alpha_rounded,
+                label: 'Browse\nA\u2013Z',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ModelsAzScreen()),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickAction(
+                icon: Icons.shopping_cart_outlined,
+                label: 'Order\nlist',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const StockScreen()),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Text('Categories', style: theme.textTheme.titleMedium),
+            const Spacer(),
+            Text(
+              '${scope.catalog.engine?.modelCount ?? 0} models indexed',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.outline),
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
         GridView.builder(
           shrinkWrap: true,
@@ -160,6 +224,50 @@ class _Body extends StatelessWidget {
   }
 }
 
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      color: scheme.secondaryContainer,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          child: Column(
+            children: [
+              Icon(icon, color: scheme.onSecondaryContainer),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.2,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSecondaryContainer,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SearchBox extends StatelessWidget {
   const _SearchBox({required this.onTap});
 
@@ -188,7 +296,7 @@ class _SearchBox extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Search model e.g. Redmi 9A, Y21, A10',
+                    'Search model, part or code — e.g. Redmi 9A battery',
                     style: TextStyle(color: scheme.outline),
                   ),
                 ),

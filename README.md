@@ -11,13 +11,40 @@ Offline-first universal compatibility list (combo/display, battery, tempered gla
 - AdMob adaptive banner + throttled interstitial (1 in 6 navigations), with an in-app personalised-ads toggle.
 - In-app privacy policy and disclaimer screens.
 
+
+**Search that understands how technicians type**
+- Ignores spacing and punctuation — `redmi9a`, `Redmi 9-A` and `REDMI  9a` are the same query.
+- Brand shorthand and common misspellings are expanded (`rn9pro`, `samsang a10`, `1+`, `moto`).
+- Typo tolerance: an exact/substring pass runs first, and only if nothing matches does it fall back to edit-distance matching, so correct spellings never get noisy results.
+- Part keywords auto-scope the query — `redmi 9a battery` searches only the Battery category. Filter chips override it.
+- Also matches group codes and battery part numbers (`BN4A`, `EB-BA546ABY`).
+- "Did you mean" suggestions when nothing matches, and model autocomplete chips above the results.
+
+**Model profile** — tap any model to see every universal part that fits it (combo, battery, glass, board, cover) plus every phone that shares those parts. Share or copy the whole parts sheet.
+
+**Compare models** — add two or more phones and instantly see which categories have a single part covering all of them. Decide what to stock before you buy.
+
+**Order list** — add any part list to a cart, attach a note (price, shelf, supplier), then send the whole order to a supplier over WhatsApp in one tap.
+
+**Browse A–Z** — a filterable index of every distinct model in the catalog, for when you are unsure of the exact spelling.
+
+**Shop notes** — a private, on-device note against any part list.
+
+**Accessibility** — in-app text size slider (85–150%) layered on top of the system setting, plus dark mode. Everything works fully offline.
+
+
 ## Project layout
 ```
 lib/
   main.dart              app bootstrap (non-blocking init)
   app_scope.dart         InheritedWidget dependency holder
   theme.dart             Material 3 theme
-  models/catalog.dart    Catalog/Category/Brand/ComboGroup + search
+  models/catalog.dart    Catalog/Category/Brand/ComboGroup + simple search
+  services/search_engine.dart  typo-tolerant index, autocomplete, model profiles
+  screens/model_screen.dart    every part that fits one phone
+  screens/compare_screen.dart  shared-part finder for 2+ phones
+  screens/models_az_screen.dart A-Z model browser
+  screens/stock_screen.dart    order / purchase list
   services/
     catalog_service.dart bundled + cached + remote catalog loading
     prefs_service.dart   recents, bookmarks, theme, ad consent (local only)

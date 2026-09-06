@@ -126,6 +126,9 @@ class ComboGroup {
             .toList(),
       );
 
+  /// Compact one-line form, handy for WhatsApp quotes.
+  String get oneLine => '$title: ${models.join(', ')}';
+
   String get shareText =>
       '$title ($code)\nCompatible models:\n${models.map((m) => '• $m').join('\n')}'
       '${note.isEmpty ? '' : '\n\nNote: $note'}\n\nvia Combo Universal app';
@@ -137,6 +140,7 @@ class SearchHit {
   final ComboGroup group;
   final List<String> matchedModels;
   final bool exact;
+  final int score;
 
   const SearchHit({
     required this.category,
@@ -144,5 +148,6 @@ class SearchHit {
     required this.group,
     required this.matchedModels,
     required this.exact,
+    this.score = 0,
   });
 }

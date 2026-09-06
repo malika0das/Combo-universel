@@ -6,6 +6,7 @@ import '../app_scope.dart';
 import '../models/catalog.dart';
 import '../widgets/banner_ad_slot.dart';
 import '../widgets/highlight_text.dart';
+import 'model_screen.dart';
 
 /// Compact card used in brand and search lists.
 class GroupCard extends StatelessWidget {
@@ -48,6 +49,25 @@ class GroupCard extends StatelessWidget {
                       maxLines: 2,
                       style: const TextStyle(
                           fontWeight: FontWeight.w700, fontSize: 15),
+                    ),
+                  ),
+                  AnimatedBuilder(
+                    animation: scope.prefs,
+                    builder: (context, _) => IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: scope.prefs.inStockList(group.code)
+                          ? 'In order list'
+                          : 'Add to order list',
+                      icon: Icon(
+                        scope.prefs.inStockList(group.code)
+                            ? Icons.shopping_cart_rounded
+                            : Icons.add_shopping_cart_outlined,
+                        size: 20,
+                        color: scope.prefs.inStockList(group.code)
+                            ? scheme.primary
+                            : null,
+                      ),
+                      onPressed: () => scope.prefs.toggleStock(group.code),
                     ),
                   ),
                   AnimatedBuilder(
@@ -108,6 +128,30 @@ class _ModelChip extends StatelessWidget {
   }
 }
 
+Future<void> _editNote(
+    BuildContext context, AppScope scope, String code, String current) async {
+  final controller = TextEditingController(text: current);
+  final result = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Shop note'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: 'e.g. Rs 850 • rack B2'),
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Save')),
+      ],
+    ),
+  );
+  if (result != null) await scope.prefs.setNote(code, result);
+}
+
 class GroupScreen extends StatelessWidget {
   const GroupScreen({super.key, required this.group, this.query = ''});
 
@@ -130,6 +174,23 @@ class GroupScreen extends StatelessWidget {
                   ? Icons.bookmark_rounded
                   : Icons.bookmark_border_rounded),
               onPressed: () => scope.prefs.toggleSaved(group.code),
+            ),
+          ),
+          AnimatedBuilder(
+            animation: scope.prefs,
+            builder: (context, _) => IconButton(
+              tooltip: 'Add to order list',
+              icon: Icon(scope.prefs.inStockList(group.code)
+                  ? Icons.shopping_cart_rounded
+                  : Icons.add_shopping_cart_outlined),
+              onPressed: () {
+                scope.prefs.toggleStock(group.code);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(scope.prefs.inStockList(group.code)
+                      ? 'Added to order list'
+                      : 'Removed from order list'),
+                ));
+              },
             ),
           ),
           IconButton(
@@ -188,6 +249,21 @@ class GroupScreen extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 16),
+          AnimatedBuilder(
+            animation: scope.prefs,
+            builder: (context, _) {
+              final note = scope.prefs.noteFor(group.code);
+              return Card(
+                child: ListTile(
+                  leading: const Icon(Icons.edit_note_rounded),
+                  title: Text(note.isEmpty ? 'Add a shop note' : note),
+                  subtitle: const Text('Price, shelf, supplier — stays on this device'),
+                  onTap: () => _editNote(context, scope, group.code, note),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
           const Text('Compatible models',
               style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
@@ -204,10 +280,20 @@ class GroupScreen extends StatelessWidget {
                           style: const TextStyle(fontSize: 11)),
                     ),
                     title: HighlightText(text: group.models[i], query: query),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.copy_rounded, size: 18),
-                      onPressed: () => Clipboard.setData(
-                          ClipboardData(text: group.models[i])),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ModelScreen(model: group.models[i]),
+                    )),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: 'Copy model',
+                          icon: const Icon(Icons.copy_rounded, size: 18),
+                          onPressed: () => Clipboard.setData(
+                              ClipboardData(text: group.models[i])),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, size: 18),
+                      ],
                     ),
                   ),
                   if (i != group.models.length - 1)

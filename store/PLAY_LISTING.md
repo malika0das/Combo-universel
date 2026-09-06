@@ -14,6 +14,11 @@ Combo Universal is a fast, offline-first compatibility reference for mobile repa
 
 WHY TECHNICIANS USE IT
 • Type a model — matching models are highlighted instantly, exactly like the website.
+• Spelling does not matter: "redmi9a", "rn9pro" and "samsang a10" all find the right part.
+• Add "battery", "glass" or "board" to a search to jump straight to that part type.
+• Tap any phone to see every universal part that fits it, on one screen.
+• Compare two phones to check whether one part covers both before you buy stock.
+• Build an order list with your own notes and send it to your supplier on WhatsApp.
 • Know before you order which universal part covers the most models.
 • Stock less, sell more: one combo can cover 5–9 models.
 • Works fully offline. No login, no signup.

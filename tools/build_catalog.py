@@ -50,6 +50,31 @@ def is_note_fragment(text: str) -> bool:
     return all(w in NOTE_WORDS for w in words)
 
 
+# The source pages spell the same phone both ways ("Xiaomi Redmi 9A" and
+# "Redmi 9A"). Dropping the redundant parent-brand prefix makes one model name
+# resolve to every part that fits it.
+REDUNDANT_PREFIXES = [
+    ("xiaomi", "redmi"), ("xiaomi", "poco"), ("xiaomi", "mi"),
+    ("vivo", "iqoo"), ("huawei", "honor"), ("oppo", "realme"),
+    ("oppo", "oneplus"), ("realme", "narzo"), ("samsung", "galaxy"),
+    ("motorola", "moto"), ("lava", "benco"),
+]
+
+
+def canonical_model(name: str) -> str:
+    """Strip a redundant parent-brand prefix: 'Xiaomi Redmi 9A' -> 'Redmi 9A'."""
+    words = name.split()
+    changed = True
+    while changed and len(words) > 2:
+        changed = False
+        for parent, child in REDUNDANT_PREFIXES:
+            if words[0].lower() == parent and words[1].lower().strip("(,") == child:
+                words = words[1:]
+                changed = True
+                break
+    return " ".join(words)
+
+
 def split_line(line: str) -> tuple[list[str], str]:
     """Return (models, note) for one raw line."""
     parts = [p.strip() for p in line.split(",")]
@@ -57,7 +82,10 @@ def split_line(line: str) -> tuple[list[str], str]:
     models: list[str] = []
     notes: list[str] = []
     for part in parts:
-        (notes if is_note_fragment(part) else models).append(part)
+        if is_note_fragment(part):
+            notes.append(part)
+        else:
+            models.append(canonical_model(part))
     # De-duplicate models, preserving order and ignoring case.
     seen: set[str] = set()
     unique: list[str] = []
