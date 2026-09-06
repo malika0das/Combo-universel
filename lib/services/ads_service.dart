@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 /// Ad configuration.
@@ -31,10 +32,15 @@ class AdsService extends ChangeNotifier {
   bool _personalized = false;
   InterstitialAd? _interstitial;
   int _navCount = 0;
+  DateTime? _lastInterstitial;
 
   /// Show an interstitial at most every N qualifying navigations, and never
   /// on app open / back press. Keeps UX clean and Play-policy safe.
   static const int interstitialEvery = 6;
+
+  /// Hard floor between two interstitials. Without this, six quick taps could
+  /// stack ads back to back, which is both hostile and a policy risk.
+  static const Duration interstitialCooldown = Duration(minutes: 2);
 
   bool get supported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   bool get initialized => _initialized;
@@ -98,11 +104,19 @@ class AdsService extends ChangeNotifier {
     if (!supported) return;
     _navCount++;
     if (_navCount % interstitialEvery != 0) return;
+
+    final now = DateTime.now();
+    final last = _lastInterstitial;
+    if (last != null && now.difference(last) < interstitialCooldown) return;
+
     final ad = _interstitial;
     if (ad == null) {
       _preloadInterstitial();
       return;
     }
+    _lastInterstitial = now;
+    _interstitial = null;
+
     ad.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
@@ -115,8 +129,11 @@ class AdsService extends ChangeNotifier {
         _preloadInterstitial();
       },
     );
-    ad.show();
-    _interstitial = null;
+    // Show *after* the current page transition finishes. Firing it inline made
+    // the ad and the route animation run at once, which looked like a stutter.
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      Future<void>.delayed(const Duration(milliseconds: 350), ad.show);
+    });
   }
 
   @override

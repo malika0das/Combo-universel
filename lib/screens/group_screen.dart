@@ -177,9 +177,93 @@ class _ModelChip extends StatelessWidget {
   }
 }
 
+/// Renders the compatible-model rows. Groups larger than [_previewCount] only
+/// render a preview until the user asks for the rest, which keeps opening a
+/// 105-model glass list instant.
+class _ModelList extends StatefulWidget {
+  const _ModelList({required this.group, required this.query});
+
+  final ComboGroup group;
+  final String query;
+
+  @override
+  State<_ModelList> createState() => _ModelListState();
+}
+
+class _ModelListState extends State<_ModelList> {
+  static const _previewCount = 25;
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final models = widget.group.models;
+    final showAll = _expanded || models.length <= _previewCount;
+    final count = showAll ? models.length : _previewCount;
+
+    return Column(
+      children: [
+        for (var i = 0; i < count; i++) ...[
+          ListTile(
+            dense: true,
+            leading: Container(
+              width: 26,
+              height: 26,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text('${i + 1}', style: AppFonts.code(context, size: 10.5)),
+            ),
+            title: HighlightText(text: models[i], query: widget.query),
+            onTap: () {
+              Haptics.tap();
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => ModelScreen(model: models[i]),
+              ));
+            },
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Copy model',
+                  icon: const Icon(Icons.copy_rounded, size: 18),
+                  onPressed: () {
+                    Haptics.confirm();
+                    Clipboard.setData(ClipboardData(text: models[i]));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Copied ${models[i]}')),
+                    );
+                  },
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 18),
+              ],
+            ),
+          ),
+          if (i != count - 1)
+            const Divider(height: 1, indent: 16, endIndent: 16),
+        ],
+        if (!showAll) ...[
+          const Divider(height: 1),
+          TextButton.icon(
+            onPressed: () {
+              Haptics.tap();
+              setState(() => _expanded = true);
+            },
+            icon: const Icon(Icons.expand_more_rounded, size: 18),
+            label: Text('Show all ${models.length} models'),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 Future<void> _editNote(
     BuildContext context, AppScope scope, String code, String current) async {
   final controller = TextEditingController(text: current);
+  try {
   final result = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
@@ -199,6 +283,11 @@ Future<void> _editNote(
     ),
   );
   if (result != null) await scope.prefs.setNote(code, result);
+  } finally {
+    // The dialog owns a controller that must be released, otherwise every
+    // note edit leaks one for the lifetime of the app.
+    controller.dispose();
+  }
 }
 
 class GroupScreen extends StatelessWidget {
@@ -335,43 +424,11 @@ class GroupScreen extends StatelessWidget {
             subtitle: 'Tap a model to see every part that fits it',
           ),
           Card(
-            child: Column(
-              children: [
-                for (var i = 0; i < group.models.length; i++) ...[
-                  ListTile(
-                    dense: true,
-                    leading: Container(
-                      width: 26,
-                      height: 26,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text('${i + 1}', style: AppFonts.code(context, size: 10.5)),
-                    ),
-                    title: HighlightText(text: group.models[i], query: query),
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => ModelScreen(model: group.models[i]),
-                    )),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: 'Copy model',
-                          icon: const Icon(Icons.copy_rounded, size: 18),
-                          onPressed: () => Clipboard.setData(
-                              ClipboardData(text: group.models[i])),
-                        ),
-                        const Icon(Icons.chevron_right_rounded, size: 18),
-                      ],
-                    ),
-                  ),
-                  if (i != group.models.length - 1)
-                    const Divider(height: 1, indent: 16, endIndent: 16),
-                ],
-              ],
-            ),
+            // sliver-free but lazy: ListView.separated inside a ListView needs
+            // shrinkWrap, which builds every child up-front. With up to 105
+            // models per group that cost a visible hitch on open, so the list
+            // is built manually and long lists are paged behind a "show all".
+            child: _ModelList(group: group, query: query),
           ),
           Gap.lg,
           const VerifyNotice(),

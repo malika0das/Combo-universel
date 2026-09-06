@@ -139,6 +139,7 @@ class StockScreen extends StatelessWidget {
   Future<void> _editNote(
       BuildContext context, AppScope scope, String code, String current) async {
     final controller = TextEditingController(text: current);
+    try {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -163,6 +164,9 @@ class StockScreen extends StatelessWidget {
       ),
     );
     if (result != null) await scope.prefs.setNote(code, result);
+    } finally {
+      controller.dispose();
+    }
   }
 
   Future<void> _confirmClear(BuildContext context, AppScope scope) async {

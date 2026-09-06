@@ -15,6 +15,18 @@ class SearchEngine {
   final List<_Entry> _entries = <_Entry>[];
   final Map<String, _ModelRef> _models = <String, _ModelRef>{};
 
+  /// Inverted index: 3-char shingle -> indices into [_entries]. Lets a query
+  /// touch a few hundred candidates instead of all ~5,700 entries, which is
+  /// what keeps typing smooth on a low-end phone.
+  final Map<String, List<int>> _shingles = <String, List<int>>{};
+
+  /// Small LRU of recent query results. Backspacing re-runs the previous query
+  /// constantly, so this turns most keystrokes into a map lookup.
+  final Map<String, SearchResult> _cache = <String, SearchResult>{};
+  static const _cacheLimit = 32;
+
+  static const _shingleSize = 3;
+
   /// Brand shorthand and common misspellings mapped to what the data uses.
   static const Map<String, String> aliases = <String, String>{
     'rn': 'redmi note',
@@ -83,15 +95,20 @@ class SearchEngine {
         for (final group in brand.groups) {
           for (final model in group.models) {
             final normal = normalize(model);
+            final index = _entries.length;
+            final packed = compact(normal);
             _entries.add(_Entry(
               category: category,
               brand: brand,
               group: group,
               model: model,
               normal: normal,
-              compact: compact(normal),
+              compact: packed,
             ));
             _models.putIfAbsent(normal, () => _ModelRef(model, normal));
+            for (final shingle in _shinglesOf(packed)) {
+              (_shingles[shingle] ??= <int>[]).add(index);
+            }
           }
         }
       }
@@ -123,6 +140,63 @@ class SearchEngine {
   }
 
   static String compact(String normalized) => normalized.replaceAll(' ', '');
+
+  /// Distinct 3-character windows of [packed], used to build and probe the
+  /// inverted index.
+  static Set<String> _shinglesOf(String packed) {
+    if (packed.length < _shingleSize) return {packed};
+    final out = <String>{};
+    for (var i = 0; i + _shingleSize <= packed.length; i++) {
+      out.add(packed.substring(i, i + _shingleSize));
+    }
+    return out;
+  }
+
+  /// Rarest shingle bucket for one contiguous string, or null when the string
+  /// is too short to shingle. An empty list means "cannot match anything".
+  List<int>? _bucketFor(String packed) {
+    if (packed.length < _shingleSize) return null;
+    List<int>? best;
+    for (final shingle in _shinglesOf(packed)) {
+      final bucket = _shingles[shingle];
+      if (bucket == null) return const [];
+      if (best == null || bucket.length < best.length) best = bucket;
+    }
+    return best;
+  }
+
+  /// Entry indices worth scoring, or null to mean "scan everything".
+  ///
+  /// The scorer accepts a hit either as a contiguous substring of the whole
+  /// query OR as all tokens present in any order, so the candidate set must
+  /// cover both. Getting this wrong silently drops results for reordered
+  /// queries like "9a redmi", so we union the two sources.
+  List<int>? _candidates(String queryCompact, List<String> tokens) {
+    final direct = _bucketFor(queryCompact);
+
+    // Rarest single token decides the token-order-independent candidates.
+    List<int>? tokenBucket;
+    for (final token in tokens) {
+      final bucket = _bucketFor(token);
+      if (bucket == null) {
+        // A token too short to index (e.g. "9a") could match anywhere.
+        tokenBucket = null;
+        break;
+      }
+      if (tokenBucket == null || bucket.length < tokenBucket.length) {
+        tokenBucket = bucket;
+      }
+    }
+
+    // Either source demanding a full scan forces a full scan.
+    if (direct == null && tokens.isEmpty) return null;
+    if (tokens.isNotEmpty && tokenBucket == null) return null;
+    if (direct == null) return tokenBucket;
+    if (tokenBucket == null) return direct;
+
+    final union = <int>{...direct, ...tokenBucket};
+    return union.toList(growable: false);
+  }
 
   /// Splits digits from letters so "note8" also matches "note 8", and expands
   /// brand shorthand.
@@ -190,8 +264,13 @@ class SearchEngine {
   }) {
     final normal = normalize(rawQuery);
     if (normal.isEmpty) {
-      return const SearchResult(hits: [], suggestions: [], scopedCategoryId: null, fuzzy: false);
+      return const SearchResult(
+          hits: [], suggestions: [], scopedCategoryId: null, fuzzy: false);
     }
+
+    final cacheKey = '$normal|${categoryId ?? ''}|$autoScope|$limit';
+    final cached = _cache[cacheKey];
+    if (cached != null) return cached;
 
     var scope = categoryId;
     if (scope == null && autoScope) scope = detectCategory(rawQuery);
@@ -207,17 +286,32 @@ class SearchEngine {
 
     for (var pass = 0; pass < 2; pass++) {
       final allowFuzzy = pass == 1;
-      for (final entry in _entries) {
-        if (scope != null && entry.category.id != scope) continue;
+      // Pass 0 only ever matches substrings, so the shingle index can safely
+      // narrow the candidates. Pass 1 is fuzzy and must consider everything.
+      final candidates =
+          allowFuzzy ? null : _candidates(queryCompact, effectiveTokens);
+
+      void consider(_Entry entry) {
+        if (scope != null && entry.category.id != scope) return;
         final score = _score(entry, normal, queryCompact, effectiveTokens,
             allowFuzzy: allowFuzzy);
-        if (score <= 0) continue;
+        if (score <= 0) return;
         if (allowFuzzy) usedFuzzy = true;
         final acc = byGroup.putIfAbsent(
           '${entry.category.id}/${entry.group.code}',
           () => _Accumulator(entry.category, entry.brand, entry.group),
         );
         acc.add(entry.model, score);
+      }
+
+      if (candidates != null) {
+        for (final i in candidates) {
+          consider(_entries[i]);
+        }
+      } else {
+        for (final entry in _entries) {
+          consider(entry);
+        }
       }
       if (byGroup.isNotEmpty) break;
     }
@@ -260,12 +354,16 @@ class SearchEngine {
         return a.group.code.compareTo(b.group.code);
       });
 
-    return SearchResult(
+    final result = SearchResult(
       hits: hits.length > limit ? hits.sublist(0, limit) : hits,
       suggestions: hits.isEmpty ? suggest(rawQuery) : const [],
       scopedCategoryId: scope,
       fuzzy: usedFuzzy,
     );
+
+    if (_cache.length >= _cacheLimit) _cache.remove(_cache.keys.first);
+    _cache[cacheKey] = result;
+    return result;
   }
 
   int _score(
@@ -304,6 +402,9 @@ class SearchEngine {
     if (normal.length < 3) return const [];
     final scored = <MapEntry<String, int>>[];
     for (final ref in _models.values) {
+      // editDistance already early-exits on a length gap, but checking here
+      // avoids the allocation of its DP rows for the vast majority of models.
+      if ((ref.normal.length - normal.length).abs() > 3) continue;
       final distance = editDistance(ref.normal, normal, max: 3);
       if (distance <= 3) scored.add(MapEntry(ref.display, distance));
     }
@@ -322,10 +423,12 @@ class SearchEngine {
       final c = compact(ref.normal);
       if (c.startsWith(target)) {
         starts.add(ref.display);
-      } else if (contains.length < limit * 3 && c.contains(target)) {
+      } else if (contains.length < limit * 4 && c.contains(target)) {
         contains.add(ref.display);
       }
-      if (starts.length >= limit * 3) break;
+      // Only stop once we have plenty of prefix hits; stopping earlier used to
+      // discard shorter (better) matches that appear later in the map.
+      if (starts.length >= limit * 6) break;
     }
     starts.sort((a, b) => a.length.compareTo(b.length));
     contains.sort((a, b) => a.length.compareTo(b.length));

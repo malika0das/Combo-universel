@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -176,6 +178,7 @@ class _DelayedBuild extends StatefulWidget {
 
 class _DelayedBuildState extends State<_DelayedBuild> {
   bool _ready = false;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -183,10 +186,19 @@ class _DelayedBuildState extends State<_DelayedBuild> {
     if (widget.delay == Duration.zero) {
       _ready = true;
     } else {
-      Future<void>.delayed(widget.delay).then((_) {
+      // A cancellable Timer, not Future.delayed: scrolling a long list creates
+      // and destroys these constantly, and an uncancellable future keeps the
+      // whole element tree alive until it fires.
+      _timer = Timer(widget.delay, () {
         if (mounted) setState(() => _ready = true);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override

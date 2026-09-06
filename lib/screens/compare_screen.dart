@@ -37,6 +37,20 @@ class _CompareScreenState extends State<CompareScreen> {
     super.dispose();
   }
 
+  /// Build must stay pure, so the celebration state is reconciled *after* the
+  /// frame. Mutating it inline used to re-fire the burst and the haptic on
+  /// every unrelated rebuild (theme change, keyboard opening, rotation).
+  void _syncMatchState(bool matched) {
+    if (matched == _wasMatched) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || matched == _wasMatched) return;
+      setState(() {
+        _wasMatched = matched;
+        if (matched) _matchToken++;
+      });
+    });
+  }
+
   void _add(String model) {
     if (model.trim().isEmpty) return;
     if (_models.any((m) => m.toLowerCase() == model.toLowerCase())) {
@@ -59,14 +73,7 @@ class _CompareScreenState extends State<CompareScreen> {
     final profiles =
         engine == null ? <ModelProfile>[] : _models.map(engine.profileFor).toList();
     final shared = _sharedParts(profiles);
-
-    // Fire the celebration only on the transition into a match.
-    final matched = shared.isNotEmpty;
-    if (matched && !_wasMatched) {
-      _matchToken++;
-      WidgetsBinding.instance.addPostFrameCallback((_) => Haptics.confirm());
-    }
-    _wasMatched = matched;
+    _syncMatchState(shared.isNotEmpty);
 
     return Scaffold(
       appBar: AppBar(

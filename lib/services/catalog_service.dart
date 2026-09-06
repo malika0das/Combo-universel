@@ -28,13 +28,19 @@ class CatalogService extends ChangeNotifier {
   SearchEngine? _engine;
   bool _loading = true;
   bool _refreshing = false;
+  bool _disposed = false;
   String? _error;
   String _source = 'bundled';
 
   Catalog? get catalog => _catalog;
 
-  /// Typo-tolerant search index, rebuilt whenever the catalog changes.
-  SearchEngine? get engine => _engine;
+  /// Typo-tolerant search index. Built lazily on first use and cached: doing it
+  /// eagerly in [init] added ~5,700 index insertions to the very first frame.
+  SearchEngine? get engine {
+    final catalog = _catalog;
+    if (catalog == null) return null;
+    return _engine ??= SearchEngine(catalog);
+  }
   bool get loading => _loading;
   bool get refreshing => _refreshing;
   String? get error => _error;
@@ -48,7 +54,7 @@ class CatalogService extends ChangeNotifier {
       final cached = await _loadCached();
       _catalog = (cached != null && cached.version > bundled.version) ? cached : bundled;
       _source = identical(_catalog, cached) ? 'cached update' : 'bundled';
-      _engine = _catalog == null ? null : SearchEngine(_catalog!);
+      _engine = null; // built lazily on first access, off the critical path
       _error = null;
     } catch (e) {
       _error = 'Could not load list data.';
@@ -77,7 +83,7 @@ class CatalogService extends ChangeNotifier {
   /// Downloads a newer catalog if one is published. Failures are non-fatal:
   /// the app keeps working with bundled/cached data.
   Future<bool> refreshFromRemote({bool userInitiated = false}) async {
-    if (_refreshing) return false;
+    if (_disposed || _refreshing) return false;
     _refreshing = true;
     if (userInitiated) notifyListeners();
     var updated = false;
@@ -90,7 +96,7 @@ class CatalogService extends ChangeNotifier {
             jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>);
         if (_catalog == null || remote.version > _catalog!.version) {
           _catalog = remote;
-          _engine = SearchEngine(remote);
+          _engine = null; // invalidate; rebuilt lazily against the new catalog
           _source = 'online update';
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_cacheKey, utf8.decode(res.bodyBytes));
@@ -101,7 +107,14 @@ class CatalogService extends ChangeNotifier {
       // offline or endpoint not published yet - ignore
     }
     _refreshing = false;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
     return updated;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _client.close();
+    super.dispose();
   }
 }

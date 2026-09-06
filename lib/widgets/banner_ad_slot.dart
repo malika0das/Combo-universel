@@ -18,33 +18,64 @@ class BannerAdSlot extends StatefulWidget {
 class _BannerAdSlotState extends State<BannerAdSlot> {
   BannerAd? _ad;
   bool _loaded = false;
-  bool _requested = false;
+  int _loadedForWidth = 0;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ads initialise asynchronously after first frame, so a slot built before
+    // that used to request nothing and stay blank forever. Listening means the
+    // banner appears as soon as the SDK is ready.
+    widget.ads.addListener(_onAdsChanged);
+  }
+
+  void _onAdsChanged() {
+    if (mounted && !_loaded) _maybeLoad();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_requested) return;
-    _requested = true;
-    _load();
+    _maybeLoad();
   }
 
-  Future<void> _load() async {
+  /// Loads (or reloads) the banner for the current width. Rotating the device
+  /// changes the correct adaptive size, and the old ad would otherwise be left
+  /// stretched or clipped.
+  Future<void> _maybeLoad() async {
     if (!widget.ads.supported || !widget.ads.initialized) return;
+    if (_loading) return;
     final width = MediaQuery.sizeOf(context).width.truncate();
-    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
-    if (size == null || !mounted) return;
-    final ad = widget.ads.createBanner(
-      size: size,
-      onLoaded: () {
-        if (mounted) setState(() => _loaded = true);
-      },
-    );
-    _ad = ad;
-    await ad.load();
+    if (width <= 0 || width == _loadedForWidth) return;
+
+    _loading = true;
+    _loadedForWidth = width;
+    try {
+      final size =
+          await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
+      if (size == null || !mounted) return;
+
+      final previous = _ad;
+      final ad = widget.ads.createBanner(
+        size: size,
+        onLoaded: () {
+          if (mounted) setState(() => _loaded = true);
+        },
+      );
+      _ad = ad;
+      await ad.load();
+      // Only dispose the old ad once its replacement exists, so the slot never
+      // collapses to zero height mid-rotation.
+      previous?.dispose();
+    } finally {
+      _loading = false;
+    }
   }
 
   @override
   void dispose() {
+    widget.ads.removeListener(_onAdsChanged);
     _ad?.dispose();
     super.dispose();
   }
