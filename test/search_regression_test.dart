@@ -106,6 +106,42 @@ void main() {
     });
   });
 
+  group('profileFor index', () {
+    test('agrees with an exhaustive scan over every catalog model', () {
+      // profileFor used to linear-scan all ~5,700 rows; it is now indexed by
+      // exact normalised model name. The two must return the same parts.
+      for (final model in engine.allModels.take(300)) {
+        final expected = <String>{};
+        for (final category in catalog.categories) {
+          for (final brand in category.brands) {
+            for (final group in brand.groups) {
+              final match = group.models.any((m) =>
+                  SearchEngine.normalize(m) == SearchEngine.normalize(model));
+              if (match) expected.add('${category.id}/${group.code}');
+            }
+          }
+        }
+        final actual = engine
+            .profileFor(model)
+            .parts
+            .map((p) => '${p.category.id}/${p.group.code}')
+            .toSet();
+        expect(actual, equals(expected), reason: 'profile mismatch for $model');
+      }
+    });
+
+    test('siblings never include the model itself', () {
+      for (final model in engine.allModels.take(200)) {
+        final profile = engine.profileFor(model);
+        final self = SearchEngine.normalize(model);
+        expect(
+          profile.siblings.any((s) => SearchEngine.normalize(s) == self),
+          isFalse,
+        );
+      }
+    });
+  });
+
   group('robustness against odd input', () {
     test('punctuation-only and whitespace queries are safe', () {
       for (final query in ['', '   ', '!!!', '---', '  ??  ']) {

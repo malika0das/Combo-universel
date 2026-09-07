@@ -104,7 +104,7 @@ class CatalogService extends ChangeNotifier {
         }
       }
     } catch (_) {
-      // offline or endpoint not published yet - ignore
+      // Offline, or the endpoint is not published yet. Ignore and keep the seed.
     }
     _refreshing = false;
     if (!_disposed) notifyListeners();

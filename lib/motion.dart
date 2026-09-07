@@ -277,7 +277,20 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1400),
-  )..repeat();
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Under reduced motion the shimmer is not painted, so running the ticker
+    // would burn frames to produce a value nothing reads. TickerMode already
+    // pauses it off-screen; this covers the accessibility case.
+    if (Motion.reduced(context)) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
 
   @override
   void dispose() {

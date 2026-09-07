@@ -473,18 +473,50 @@ class _RotatingHintState extends State<_RotatingHint> {
 
   int _i = 0;
   Timer? _timer;
+  AppLifecycleListener? _lifecycle;
 
   @override
   void initState() {
     super.initState();
+    // Stop cycling while the app is backgrounded: the rebuilds are invisible
+    // but still cost wakeups and battery.
+    _lifecycle = AppLifecycleListener(
+      onHide: _stop,
+      onPause: _stop,
+      onShow: _start,
+      onRestart: _start,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Under reduced motion only the first hint is ever shown, so the timer
+    // would rebuild the widget to no visible effect.
+    if (Motion.reduced(context)) {
+      _stop();
+    } else {
+      _start();
+    }
+  }
+
+  void _start() {
+    if (_timer != null || !mounted) return;
+    if (Motion.reduced(context)) return;
     _timer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (mounted) setState(() => _i = (_i + 1) % _hints.length);
     });
   }
 
+  void _stop() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
   @override
   void dispose() {
-    _timer?.cancel();
+    _stop();
+    _lifecycle?.dispose();
     super.dispose();
   }
 

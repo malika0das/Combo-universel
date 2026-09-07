@@ -125,7 +125,19 @@ class _DepthOrbState extends State<DepthOrb>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 9),
-  )..repeat();
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The orbiting highlight is frozen under reduced motion, so keep the
+    // ticker idle rather than animating a value that is never painted.
+    if (Motion.reduced(context)) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
 
   @override
   void dispose() {

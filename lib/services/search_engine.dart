@@ -13,6 +13,10 @@ class SearchEngine {
   final Catalog catalog;
 
   final List<_Entry> _entries = <_Entry>[];
+
+  /// Exact normalised model name -> indices into [_entries]. Backs [profileFor],
+  /// which previously linear-scanned all ~5,700 rows on every model tap.
+  final Map<String, List<int>> _byModel = <String, List<int>>{};
   final Map<String, _ModelRef> _models = <String, _ModelRef>{};
 
   /// Inverted index: 3-char shingle -> indices into [_entries]. Lets a query
@@ -106,6 +110,7 @@ class SearchEngine {
               compact: packed,
             ));
             _models.putIfAbsent(normal, () => _ModelRef(model, normal));
+            (_byModel[normal] ??= <int>[]).add(index);
             for (final shingle in _shinglesOf(packed)) {
               (_shingles[shingle] ??= <int>[]).add(index);
             }
@@ -440,8 +445,8 @@ class SearchEngine {
     final normal = normalize(model);
     final parts = <ModelPart>[];
     final siblings = <String, String>{};
-    for (final entry in _entries) {
-      if (entry.normal != normal) continue;
+    for (final i in _byModel[normal] ?? const <int>[]) {
+      final entry = _entries[i];
       parts.add(ModelPart(entry.category, entry.brand, entry.group));
       for (final other in entry.group.models) {
         final key = normalize(other);
