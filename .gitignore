@@ -1,0 +1,18 @@
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.idea/
+*.iml
+android/local.properties
+android/key.properties
+android/.gradle/
+android/app/*.jks
+android/app/google-services.json
+ios/Pods/
+*.log
+
+# Brand font binaries are fetched with tools/fetch_fonts.sh, not committed.
+assets/google_fonts/*.ttf
+assets/google_fonts/OFL.txt

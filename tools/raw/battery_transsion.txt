@@ -1,0 +1,20 @@
+BL-29Bi Battery Universal|Itel S15, Itel A55, Itel S33, Itel S15 Pro
+BL-39LX Battery Universal|Infinix S5 (X652), Infinix S5 Lite, Infinix Smart 4 (X680), Infinix Hot 20 (X6826)
+BL-49Ci Battery Universal|Itel P11, Itel P12, Itel Power Pro P41
+BL-58BX Battery Universal 6000mAh|Infinix Hot 10 Play, Infinix Hot 10s, Infinix Hot 12, Infinix Hot 12 Play, Infinix Hot 20 Play, Infinix Smart 5, Infinix Smart 4, Infinix Smart 4 Plus, Infinix Hot 9 Play (X680C)
+BL-39Li Battery Universal|Itel Vision 1, Itel Vision 2, Itel A56, Itel A56 Pro, Itel Vision 1 Pro (L6502), Itel S16 Pro
+BL-49KX Battery Universal|Infinix Note 11, Infinix Note 12
+BL-49LX Battery Universal|Infinix Hot 12 (X6817), Infinix Hot 20s
+BL-51BX Battery Universal|Infinix X692, Infinix Note 8, Infinix Hot 10, Infinix Note 8i
+BL-49SV Battery Universal|Tecno Spark Go 2020
+BL-49FT/BL-49JX Battery Universal 5000mAh|Infinix Hot 9, Infinix Hot 9 Pro, Infinix Hot 8 Lite, Infinix Hot 8 Pro, Infinix Hot 10, Infinix Hot 10 Lite, Infinix Smart 5, Infinix Smart 6 HD, Infinix Smart 4C, Infinix Note 7 Lite, Infinix Hot 12i, Infinix Smart 7, Infinix Smart 8, Tecno Spark 8P, Infinix Smart 4 Plus, Infinix Note 10 Pro, Infinix Note 11 Pro, Tecno Spark 5, Tecno Spark 5 Pro, Tecno Spark 6 Go, Tecno Spark 7, Tecno Spark 7 Pro, Tecno Spark 8, Tecno Spark 8T, Tecno Spark 9, Tecno Spark 9T, Tecno Spark 8C, Tecno Pop 5 Lite, Tecno Camon 15, Tecno Camon 17, Tecno Camon 18, Tecno Camon 19 Neo, Tecno Pop 5 LTE, Tecno Pop 6 Pro, Tecno Pouvoir 4
+BL-58CT Battery Universal 6000mAh|Tecno Spark 7 (KF6), Tecno Spark 7T, Tecno Spark Go 2020 (KE5), Tecno KF6J
+BL-49FX Battery Universal 5000mAh|Infinix Hot 8, Infinix Smart 6
+BL-49LT Battery Universal 5000mAh|Tecno Camon 19 (CI6N)
+BL-50FX Battery Universal 5160mAh|Infinix Hot 60i 4G (X6728B), Infinix Hot 60 Pro 4G
+BL-49GX Battery Universal|Infinix Hot 9, Infinix Note 10, Infinix Smart 6 Plus, Infinix Note 7, Infinix Smart 7 HD, Infinix Smart 5A, Infinix Hot 12 Pro, Infinix Note 11, Infinix Note 11S, Infinix Hot 11S NFC, Infinix Zero 5G
+BL-49NI/BL-49FT Battery Universal 5000mAh|Itel A60, Itel A60S (A662LM), Itel A70, Itel A80, Benco V90 Plus
+BL-49NT/BL-49NX Battery Universal 5000mAh|Infinix Hot 30i (X669C), Infinix Smart 7 HD (X6516), Infinix Smart 10 (X6725), Infinix Smart 9 (X6532), Tecno Spark Go 1 (KL4)
+BL-58HI Battery Universal 6000mAh|Itel Power 70, Itel P36, Itel P37
+BL-5ABT Battery Universal 5000mAh|Tecno Pova 6 Neo 5G, Tecno Spark 30C (KI5N), Tecno Spark 30 4G, Tecno Spark 30 5G
+BL-55AT Battery Universal 5500mAh|Tecno Pova Curve 5G
